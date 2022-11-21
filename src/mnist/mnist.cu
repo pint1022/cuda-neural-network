@@ -53,12 +53,21 @@ Minist::Minist(std::string minst_data_path, float learning_rate, float l2,
 }
 
 void Minist::train(int epochs, int batch_size) {
+	clock_t start, end;
+	start = clock();  
   for (int epoch = 0; epoch < epochs; epoch++) {
     int idx = 1;
+    float time_epoch_fd, time_epoch_bd;
+	  clock_t start_e;
 
     while (dataset->has_next(true)) {
+   	  start_e = clock();  
       forward(batch_size, true);
+      time_epoch_fd = (clock() - start_e) * 1000000 / CLOCKS_PER_SEC;
+
+   	  start_e = clock();  
       backward();
+      time_epoch_bd = (clock() - start_e) * 1000000 / CLOCKS_PER_SEC;
       rmsprop->step();
 
       if (idx % 10 == 0) {
@@ -69,6 +78,9 @@ void Minist::train(int epochs, int batch_size) {
         std::cout << "Epoch: " << epoch << ", Batch: " << idx
                   << ", NLLLoss: " << loss
                   << ", Train Accuracy: " << (float(acc.first) / acc.second)
+                  << ", Train time (micro-s): " << time_epoch_fd + time_epoch_bd
+                  << "\n   forwards: " << time_epoch_fd 
+                  << "\n    backwards: " << time_epoch_bd 
                   << std::endl;
       }
       ++idx;
@@ -77,6 +89,10 @@ void Minist::train(int epochs, int batch_size) {
     test(batch_size);
     dataset->reset();
   }
+
+	end = clock();
+  std::cout << "Total training time (micro-s): " << ((end - start)) * 1000000 / CLOCKS_PER_SEC
+            << std::endl;
 }
 
 void Minist::test(int batch_size) {
@@ -102,7 +118,7 @@ void Minist::test(int batch_size) {
   std::cout << "Total Accuracy: " << (float(count) / total) << std::endl;
 }
 
-void Minist::forward(int batch_size, bool is_train) {
+void  Minist::forward(int batch_size, bool is_train) {
   dataset->forward(batch_size, is_train);
   const Storage* labels = dataset->get_label();
 
@@ -127,6 +143,7 @@ void Minist::forward(int batch_size, bool is_train) {
   log_softmax->forward();
 
   if (is_train) nll_loss->forward(labels);
+
 }
 
 void Minist::backward() {

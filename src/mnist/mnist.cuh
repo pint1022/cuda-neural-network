@@ -4,9 +4,9 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
-
+#include <time.h>
 #include <thrust/system/cuda/experimental/pinned_allocator.h>
-
+#include <thrust/host_vector.h>
 #include <blas.cuh>
 #include <conv.cuh>
 #include <dataset.cuh>

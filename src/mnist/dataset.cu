@@ -2,7 +2,7 @@
 #include <utils.cuh>
 
 #include <thrust/system/cuda/experimental/pinned_allocator.h>
-
+#include <thrust/host_vector.h>
 #include <algorithm>
 #include <chrono>
 #include <fstream>
