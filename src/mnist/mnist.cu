@@ -91,7 +91,7 @@ void Minist::train(int epochs, int batch_size) {
   }
 
 	end = clock();
-  std::cout << "Total training time (micro-s): " << ((end - start)) * 1000000 / CLOCKS_PER_SEC
+  std::cout << "Total training time (s): " << ((end - start)) / CLOCKS_PER_SEC
             << std::endl;
 }
 
