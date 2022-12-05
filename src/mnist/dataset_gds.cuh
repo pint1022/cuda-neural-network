@@ -1,16 +1,22 @@
 #pragma once
 
-#include <layer.cuh>
+#include <layer_gds.cuh>
 
 #include <iostream>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
+#include <cuda.h>
+#include <cuda_runtime.h>
 
-class DataSet_GDS : public Layer {
+#include "cufile.h"
+
+#define KB(x) ((x)*1024L)
+
+class DataSetGDS : public GDSLayer {
  public:
-  explicit DataSet_GDS(std::string minist_data_path, bool shuffle = false);
+  explicit DataSetGDS(std::string minist_data_path, bool shuffle = false);
   void reset();
 
   void forward(int batch_size, bool is_train);
@@ -18,26 +24,31 @@ class DataSet_GDS : public Layer {
 
   int get_height() { return this->height; }
   int get_width() { return this->width; }
-  Storage* get_label() { return this->output_label.get(); }
+  char* get_label() { return this->output_label; }
 
   void print_im();
+
+  int get_train_datasize() { return this->train_data_size;}
+  int get_test_datasize() { return this->test_data_size;}
 
  private:
   unsigned int reverse_int(unsigned int i);  // big endian
   void read_images(std::string file_name,
-                   std::vector<std::vector<float>>& output);
-  void read_labels(std::string file_name, std::vector<unsigned char>& output);
+                   char*);
+  void read_labels(std::string file_name, char*);
 
-  std::vector<std::vector<float>> train_data;
-  std::vector<unsigned char> train_label;
+  char* train_data;
+  char* train_label;
   int train_data_index;
+  int train_data_size;
 
-  std::vector<std::vector<float>> test_data;
-  std::vector<unsigned char> test_label;
+  char* test_data;
+  char* test_label;
   int test_data_index;
+  int test_data_size;
 
   int height;
   int width;
   bool shuffle;
-  std::unique_ptr<Storage> output_label;
+  char* output_label;
 };

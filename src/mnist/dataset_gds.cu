@@ -1,14 +1,12 @@
-﻿#include <DataSet_GDS.cuh>
+﻿#include <DataSet_gds.cuh>
 #include <utils.cuh>
 
-#include <thrust/system/cuda/experimental/pinned_allocator.h>
-#include <thrust/host_vector.h>
 #include <algorithm>
 #include <chrono>
 #include <fstream>
 #include <random>
 
-DataSet_GDS::DataSet_GDS(std::string mnist_data_path, bool shuffle)
+DataSetGDS::DataSetGDS(std::string mnist_data_path, bool shuffle)
     : shuffle(shuffle), train_data_index(0), test_data_index(0) {
   // train data
   this->read_images(mnist_data_path + "/train-images-idx3-ubyte",
@@ -22,7 +20,7 @@ DataSet_GDS::DataSet_GDS(std::string mnist_data_path, bool shuffle)
                     this->test_label);
 }
 
-void DataSet_GDS::reset() {
+void DataSetGDS::reset() {
   this->train_data_index = 0;
   this->test_data_index = 0;
 
@@ -38,11 +36,12 @@ void DataSet_GDS::reset() {
   }
 }
 
-void DataSet_GDS::forward(int batch_size, bool is_train) {
+void DataSetGDS::forward(int batch_size, bool is_train) {
   if (is_train) {
     int start = this->train_data_index;
+    int data_size = sizeof(this->train_data) / sizeof(char);
     int end = std::min(this->train_data_index + batch_size,
-                       (int)this->train_data.size());
+                       data_size);
     this->train_data_index = end;
     int size = end - start;
 
@@ -100,22 +99,21 @@ void DataSet_GDS::forward(int batch_size, bool is_train) {
       test_data_buffer.insert(test_data_buffer.end(),
                               this->test_data[i].begin(),
                               this->test_data[i].end());
-      this->output_label
-          ->get_data()[(i - start) * one_hot_stride + this->test_label[i]] = 1;
+      this->output_label[(i - start) * one_hot_stride + this->test_label[i]] = 1;
     }
     this->output->get_data() = test_data_buffer;
   }
 }
 
-bool DataSet_GDS::has_next(bool is_train) {
+bool DataSetGDS::has_next(bool is_train) {
   if (is_train) {
-    return this->train_data_index < this->train_data.size();
+    return this->train_data_index < this->train_data_size;
   } else {
-    return this->test_data_index < this->test_data.size();
+    return this->test_data_index < this->test_data_size;
   }
 }
 
-void DataSet_GDS::print_im() {
+void DataSetGDS::print_im() {
   int size = this->output->get_shape()[0];
   int im_stride = 1 * height * width;
 
@@ -123,7 +121,7 @@ void DataSet_GDS::print_im() {
     int max_pos = -1;
     float max_value = -FLT_MAX;
     for (int i = 0; i < 10; i++) {
-      float val = this->output_label->get_data()[k * 10 + i];
+      float val = this->output_label[k * 10 + i];
       if (val > max_value) {
         max_value = val;
         max_pos = i;
@@ -131,7 +129,7 @@ void DataSet_GDS::print_im() {
     }
 
     std::cout << max_pos << std::endl;
-    auto& data = this->output->get_data();
+    auto& data = this->output;
     for (int i = 0; i < height; i++) {
       for (int j = 0; j < width; j++) {
         std::cout << (data[k * im_stride + i * width + j] > 0 ? "* " : "  ");
@@ -141,7 +139,7 @@ void DataSet_GDS::print_im() {
   }
 }
 
-unsigned int DataSet_GDS::reverse_int(unsigned int i) {
+unsigned int DataSetGDS::reverse_int(unsigned int i) {
   unsigned char ch1, ch2, ch3, ch4;
   ch1 = i & 255;
   ch2 = (i >> 8) & 255;
@@ -151,65 +149,131 @@ unsigned int DataSet_GDS::reverse_int(unsigned int i) {
          ((unsigned int)ch3 << 8) + ch4;
 }
 
-void DataSet_GDS::read_images(std::string file_name,
-                          std::vector<std::vector<float>>& output) {
-  std::ifstream file(file_name, std::ios::binary);
-  if (file.is_open()) {
-    unsigned int magic_number = 0;
-    unsigned int number_of_images = 0;
-    unsigned int n_rows = 0;
-    unsigned int n_cols = 0;
-    file.read((char*)&magic_number, sizeof(magic_number));
-    file.read((char*)&number_of_images, sizeof(number_of_images));
-    file.read((char*)&n_rows, sizeof(n_rows));
-    file.read((char*)&n_cols, sizeof(n_cols));
-    magic_number = this->reverse_int(magic_number);
-    number_of_images = this->reverse_int(number_of_images);
-    n_rows = this->reverse_int(n_rows);
-    n_cols = this->reverse_int(n_cols);
+void DataSetGDS::read_images(std::string file_name,
+                          char* gpuimg_buf) {
+    int fd;
+    int fd;
+    int ret;
+    
+    fd = open(file_name, O_RDONLY);                                
 
-    std::cout << file_name << std::endl;
-    std::cout << "magic number = " << magic_number << std::endl;
-    std::cout << "number of images = " << number_of_images << std::endl;
-    std::cout << "rows = " << n_rows << std::endl;
-    std::cout << "cols = " << n_cols << std::endl;
+    if (fd != -1) {
+        int *sys_len;
+        int *meta;
+        int parasize=KB(1);
+        int bufsize = KB(4);
 
-    this->height = n_rows;
-    this->width = n_cols;
+        off_t file_offset = 0;
+        off_t mem_offset = 0;
+        int metasize=16;
+        unsigned int magic_number = 0;
+        unsigned int number_of_images = 0;
+        unsigned int n_rows = 0;
+        unsigned int n_cols = 0;
 
-    std::vector<unsigned char> image(n_rows * n_cols);
-    std::vector<float> normalized_image(n_rows * n_cols);
+        sys_len = (int*)malloc(parasize);
 
-    for (int i = 0; i < number_of_images; i++) {
-      file.read((char*)&image[0], sizeof(unsigned char) * n_rows * n_cols);
+        CUfileDescr_t cf_desc; 
+        CUfileHandle_t cf_handle;
 
-      for (int i = 0; i < n_rows * n_cols; i++) {
-        normalized_image[i] = (float)image[i] / 255 - 0.5;
-      }
-      output.push_back(normalized_image);
+        cuFileDriverOpen();
+        fd = open(file_name, O_RDWR|O_DIRECT);
+        cf_desc.handle.fd = fd;
+        cf_desc.type = CU_FILE_HANDLE_TYPE_OPAQUE_FD;
+        cuFileHandleRegister(&cf_handle, &cf_desc);
+
+        cudaMalloc(&meta, bufsize);
+        // thrust::device_ptr<char> dev_ptr(gpumem_buf);
+        // cuFileBufRegister((char*)meta, bufsize, 0);
+
+        ret = cuFileRead(cf_handle, (char*)meta, metasize, file_offset, mem_offset);
+        if (ret < 0) {
+          printf("cuFileRead failed : %d\n", ret); 
+        } 
+        cudaMemcpy(sys_len, gpumem_buf, metasize, cudaMemcpyDeviceToHost);
+        magic_number = reverse_int(((int*)sys_len)[0]);
+        number_of_images = reverse_int(((int*)sys_len)[1]);
+        n_rows = reverse_int(((int*)sys_len)[2]);
+        n_cols = reverse_int(((int*)sys_len)[3]);
+
+        // std::cout << file_name << std::endl;
+        // std::cout << "magic number = " << magic_number << std::endl;
+        // std::cout << "number of images = " << number_of_images << std::endl;
+        // std::cout << "rows = " << n_rows << std::endl;
+        // std::cout << "cols = " << n_cols << std::endl;
+
+        this->height = n_rows;
+        this->width = n_cols;
+
+        this->train_data_size = n_rows * n_cols * sizeof(char) * number_of_images;
+        int n_bufsize = n_rows * n_cols * sizeof(float);
+
+        cudaMalloc(&gpuimg_buf, bufsize);
+        file_offset = 4 * sizeof(int);
+        mem_offset = 0;
+
+        cuFileBufRegister((char*)gpuimg_buf, bufsize, 0);
+
+        ret = cuFileRead(cf_handle, (char*)gpuimg_buf, this->train_data_size, file_offset, mem_offset);
+        cuFileDriverClose();
+
+        close(fd);
+
+        // for (int i = 0; i < number_of_images; i++) {
+        //     file.read((char*)&image[0], sizeof(unsigned char) * n_rows * n_cols);
+
+        //     for (int i = 0; i < n_rows * n_cols; i++) {
+        //     normalized_image[i] = (float)image[i] / 255 - 0.5;
+        //     }
+        //     output.push_back(normalized_image);
+        // }
     }
-  }
 }
 
-void DataSet_GDS::read_labels(std::string file_name,
-                          std::vector<unsigned char>& output) {
-  std::ifstream file(file_name, std::ios::binary);
-  if (file.is_open()) {
-    unsigned int magic_number = 0;
-    unsigned int number_of_images = 0;
-    file.read((char*)&magic_number, sizeof(magic_number));
-    file.read((char*)&number_of_images, sizeof(number_of_images));
+void DataSetGDS::read_labels(std::string file_name,
+                          char * gpulbl_buf) {
+    int fd;
+    int fd;
+    int ret;
+    
+    fd = open(file_name, O_RDONLY);     
 
-    std::cout << file_name << std::endl;
-    magic_number = this->reverse_int(magic_number);
-    number_of_images = this->reverse_int(number_of_images);
-    std::cout << "magic number = " << magic_number << std::endl;
-    std::cout << "number of images = " << number_of_images << std::endl;
+    if (fd != -1) {
 
-    for (int i = 0; i < number_of_images; i++) {
-      unsigned char label = 0;
-      file.read((char*)&label, sizeof(label));
-      output.push_back(label);
+        unsigned int magic_number = 0;
+        unsigned int number_of_images = 0;
+
+
+        read(fd, (char*)&magic_number, sizeof(magic_number));
+        read(fd, (char*)&number_of_images, sizeof(number_of_images));
+
+        magic_number = this->reverse_int(magic_number);
+        number_of_images = this->reverse_int(number_of_images);
+        n_rows = this->reverse_int(n_rows);
+        n_cols = this->reverse_int(n_cols);
+
+        std::cout << file_name << std::endl;
+        std::cout << "magic number = " << magic_number << std::endl;
+        std::cout << "number of images = " << number_of_images << std::endl;
+
+        if (number_of_images > 0 ) {
+          cudaMalloc(&gpulbl_buf, bufsize);
+          off_t file_offset = 0;
+          off_t mem_offset = 0;
+          CUfileDescr_t cf_desc; 
+          CUfileHandle_t cf_handle;
+
+          cuFileDriverOpen();
+
+          cf_desc.handle.fd = fd;
+          cf_desc.type = CU_FILE_HANDLE_TYPE_OPAQUE_FD;
+          cuFileHandleRegister(&cf_handle, &cf_desc);
+          cuFileBufRegister((char*)gpulbl_buf, bufsize, 0);
+
+          ret = cuFileRead(cf_handle, (char*)gpuimg_lbl, number_of_images, file_offset, mem_offset);
+
+          cuFileDriverClose();
+        }
+        close(fd);
     }
-  }
 }
