@@ -37,6 +37,15 @@
     }                                               \
   } while (0)
 
+#define INIT_GDSSTORAGE(storage_ptr, shape, flag)            \
+  do {                                              \
+    if (storage_ptr.get() == nullptr) {             \
+      storage_ptr.reset(new GDSStorage(shape, flag));        \
+    } else if (storage_ptr->get_shape() != shape) { \
+      storage_ptr->resize(shape);                   \
+    }                                               \
+  } while (0)
+
 #define INIT_TEMP(dict, key_name, shape)                 \
   do {                                                   \
     if (dict.find(key_name) == dict.end()) {             \

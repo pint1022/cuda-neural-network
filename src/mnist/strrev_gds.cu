@@ -23,7 +23,7 @@
 #include <tuple>
 #include <vector>
 
-#include "dataset_gds.cuh"
+#include <dataset_gds.cuh>
 #include <layer.cuh>
 
 //   This example computes the norm [1] of a vector.  The norm is 

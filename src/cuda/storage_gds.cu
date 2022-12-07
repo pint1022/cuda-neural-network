@@ -6,69 +6,109 @@
 
 #include <cmath>
 
-GDSStorage::GDSStorage::(const std::vector<int> &_shape) : shape(_shape), flag(HOST_MEM) {
+GDSStorage::~GDSStorage()
+{
+    if (this->gpu)
+        cudaFree(this->device_data);
+    this->gpu = false;
+    std::cout << "\n GDSStorageDestructor executed";
+}
+
+GDSStorage::GDSStorage(const std::vector<int> &_shape) : shape(_shape), flag(HOST_MEM) {
   int size = 1;
   for (int i = 0; i < _shape.size(); i++) {
     size *= _shape[i];
   }
 
-  this->data.resize(size);
+  if (flag==GDS_MEM) {
+    if (this->gpu) {
+        std::cout << "Already registered?" << std::endl;
+      	cuFileBufDeregister((char*)this->device_data);
+        cudaFree(this->device_data);
+    } 
+	  cudaMalloc(&(this->device_data), size);
+    cuFileBufRegister((char*)this->device_data, size, 0);
+    this->gpu = true;
+  }
+  else 
+      std::cout << "Not supported" << std::endl;
 }
 
-GDSStorage::GDSStorage::(const std::vector<int> &_shape, float value) : shape(_shape) , flag(HOST_MEM){
+GDSStorage::GDSStorage(const std::vector<int> &_shape, float value) : shape(_shape) , flag(HOST_MEM){
   int size = 1;
   for (int i = 0; i < _shape.size(); i++) {
     size *= _shape[i];
   }
 
-  this->data.resize(size, value);
+  if (flag==GDS_MEM) {
+    if (this->gpu) {
+        std::cout << "Already registered?" << std::endl;
+      	cuFileBufDeregister((char*)this->device_data);
+        cudaFree(this->device_data);
+    } 
+	  cudaMalloc(&(this->device_data), size);
+    cuFileBufRegister((char*)this->device_data, size, 0);
+    this->gpu = true;
+  }
+  else 
+      std::cout << "Not supported" << std::endl;
 }
 
-GDSStorage::GDSStorage::(const std::vector<int> &_shape,
+GDSStorage::GDSStorage(const std::vector<int> &_shape,
                  const std::vector<float> &_data)
-    : shape(_shape), data(_data.begin(), _data.end()) , flag(HOST_MEM){
+    : shape(_shape),  flag(HOST_MEM){
   this->check_size();
 }
 
-GDSStorage::GDSStorage::(const GDSStorage:: &other) { *this = other; }
+GDSStorage::GDSStorage(const GDSStorage &other) { *this = other; }
 
-GDSStorage:: &GDSStorage::operator=(const GDSStorage:: &other) {
-  if (this != &other) {
-    this->shape = other.shape;
-    this->data = other.data;
-  }
+GDSStorage &GDSStorage::operator=(const GDSStorage &other) {
+  // if (this != &other) {
+  //   this->shape = other.shape;
+  //   this->data = other.data;
+  // }
 
-  return *this;
+  // return *this;
+  std::cout << "not supported" << std::endl;
 }
 
-GDSStorage::GDSStorage::(const std::vector<int> &_shape, int flag) : shape(_shape) {
+GDSStorage::GDSStorage(const std::vector<int> &_shape, int flag) : shape(_shape) {
   int size = 1;
   for (int i = 0; i < _shape.size(); i++) {
     size *= _shape[i];
   }
 
-  if (flag==GDS_MEM)
-    printf("Not implemented\n")
+  if (flag==GDS_MEM) {
+    if (this->gpu) {
+        std::cout << "Already registered?" << std::endl;
+      	cuFileBufDeregister((char*)this->device_data);
+        cudaFree(this->device_data);
+    } 
+	  cudaMalloc(&(this->device_data), size);
+    cuFileBufRegister((char*)this->device_data, size, 0);
+    this->gpu = true;
+  }
   else 
-      this->data.resize(size);
+    printf("Not implemented\n");
 }
 
-GDSStorage::GDSStorage::(GDSStorage:: &&other) 
+GDSStorage::GDSStorage(GDSStorage &&other) 
 { 
   if (flag==GDS_MEM)
-    printf("Not implemented\n")
+    printf("Not implemented\n");
   else 
     *this = std::move(other); 
 }
 
-GDSStorage:: &GDSStorage::operator=(GDSStorage:: &&other) {
+GDSStorage &GDSStorage::operator=(GDSStorage &&other) {
   if (this != &other) {
     this->shape = std::move(other.shape);
     if (flag == GDS_MEM)
         // this->device_data = std::move(other.device_data);
-        printf("Not implemented\n")
+        printf("Not implemented\n");
     else 
-        this->data = std::move(other.data);
+        printf("Not implemented\n");
+        // this->data = std::move(other.data);
   }
   return *this;
 }
@@ -80,20 +120,35 @@ void GDSStorage::reshape(const std::vector<int> &_shape) {
 
 void GDSStorage::resize(const std::vector<int> &_shape) {
 
-    if (flag == GDS_MEM)
+    if (flag == GDS_MEM) {
         // this->device_data = std::move(other.device_data);
-        printf("Not implemented\n")
-    else {
+        if (this->gpu) {
+            std::cout << "Already registered?" << std::endl;
+            cuFileBufDeregister((char*)this->device_data);
+            cudaFree(this->device_data);
+        } 
         this->shape = _shape;
 
         int size = 1;
         for (int i = 0; i < _shape.size(); i++) {
             size *= _shape[i];
         }
+        cudaMalloc(&(this->device_data), size);
+        cuFileBufRegister((char*)this->device_data, size, 0);
+        this->gpu = true;           
+    }
+    else {
+        std::cout << "Not supported" << std::endl;
+        // this->shape = _shape;
 
-        if (size != this->data.size()) {
-            this->data.resize(size);
-        }
+        // int size = 1;
+        // for (int i = 0; i < _shape.size(); i++) {
+        //     size *= _shape[i];
+        // }
+
+        // if (size != this->data.size()) {
+        //     this->data.resize(size);
+        // }
     }
 }
 
@@ -107,11 +162,13 @@ __global__ void storage_xavier(float *a, int size, float scale,
 }
 
 void GDSStorage::xavier(size_t in_size, size_t out_size) {
-  float *a_ptr = RAW_PTR(this->data);
+  // float *a_ptr = RAW_PTR(this->data);
+  float *a_ptr = (float *)this->device_data;
+  int size;
   if (flag == HOST_MEM)
-      int size = this->data.size();
+        std::cout << "Not supported" << std::endl;
   else
-      int size = sizeof(this->device_data);
+      size = sizeof(this->device_data);
 
   int grid_size = ceil((float)(size) / BLOCK_SIZE);
 
@@ -129,8 +186,8 @@ void GDSStorage::check_size() {
     size *= this->shape[i];
   }
   if (flag == HOST_MEM)
-      CHECK_EQ(size, this->data.size(), "GDSStorage::: size error");
+        std::cout << "Not supported" << std::endl;
   else
-      CHECK_EQ(size, sizeof(this->device_data), "GDSStorage::: size error");
+      CHECK_EQ(size, sizeof(this->device_data), "GDSStorage: size error");
 
 }

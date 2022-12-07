@@ -5,12 +5,15 @@
 
 #include <iterator>
 #include <vector>
+#include "cufile.h"
 
 #define GDS_MEM 1
 #define HOST_MEM 0
 
 class GDSStorage {
  public:
+  ~GDSStorage();
+
   explicit GDSStorage(const std::vector<int> &_shape);
   explicit GDSStorage(const std::vector<int> &_shape, float value);
   explicit GDSStorage(const std::vector<int> &_shape, const std::vector<float> &_data);
@@ -29,14 +32,19 @@ class GDSStorage {
   // get
   std::vector<int> &get_shape() { return this->shape; };
   const std::vector<int> &get_shape() const { return this->shape; };
-  thrust::device_vector<float> &get_data() { return this->data; };
-  const thrust::device_vector<float> &get_data() const { return this->data; };
+
+  // thrust::device_vector<float> &get_data() { return this->data; };
+  // const thrust::device_vector<float> &get_data() const { return this->data; };
+  char* get_data() { return this->device_data; };
+  const char* get_data() const { return this->device_data; };
+  float* get_data_float() { return (float*) this->device_data; };
 
  private:
   int flag;
+  bool gpu=false;
   void check_size();  // check data/shape size
 
-  thrust::device_vector<float> data;
-  float* device_data;
+  // thrust::device_vector<float> data;
+  char* device_data;
   std::vector<int> shape;
 };
