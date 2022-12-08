@@ -37,7 +37,7 @@ class GDSStorage {
   // const thrust::device_vector<float> &get_data() const { return this->data; };
   char* get_data() { return this->device_data; };
   const char* get_data() const { return this->device_data; };
-  float* get_data_float() { return (float*) this->device_data; };
+  // const float* get_data() const { return (float*) this->device_data; };
 
  private:
   int flag;

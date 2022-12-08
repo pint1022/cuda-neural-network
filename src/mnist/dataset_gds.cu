@@ -1,4 +1,9 @@
-﻿#include <dataset_gds.cuh>
+﻿#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <string.h>
+#include <unistd.h>
+#include <dataset_gds.cuh>
 #include <utils.cuh>
 
 #include <algorithm>
@@ -123,15 +128,17 @@ void DataSetGDS::print_im() {
     int max_pos = -1;
     float max_value = -FLT_MAX;
     for (int i = 0; i < 10; i++) {
-      float val = this->output_label.get_data()[k * 10 + i];
-      if (val > max_value) {
-        max_value = val;
-        max_pos = i;
-      }
+      //
+      //D2Hcopy
+      // float val = this->output_label->get_data_float[k * 10 + i];
+      // if (val > max_value) {
+      //   max_value = val;
+      //   max_pos = i;
+      // }
     }
 
     std::cout << max_pos << std::endl;
-    auto& data = this->output.get_data();
+    const float * data = (float *) this->output->get_data();
     for (int i = 0; i < height; i++) {
       for (int j = 0; j < width; j++) {
         std::cout << (data[k * im_stride + i * width + j] > 0 ? "* " : "  ");
@@ -154,10 +161,9 @@ unsigned int DataSetGDS::reverse_int(unsigned int i) {
 void DataSetGDS::read_images(std::string file_name,
                           char* gpuimg_buf) {
     int fd;
-    int fd;
     int ret;
     
-  	fd = open(file_name, O_RDWR|O_DIRECT);
+  	fd = open(file_name.c_str(), O_RDWR|O_DIRECT);
 
     if (fd != -1) {
         int *sys_len;
@@ -179,7 +185,7 @@ void DataSetGDS::read_images(std::string file_name,
         CUfileHandle_t cf_handle;
 
         cuFileDriverOpen();
-        fd = open(file_name, O_RDWR|O_DIRECT);
+        fd = open(file_name.c_str(), O_RDWR|O_DIRECT);
         cf_desc.handle.fd = fd;
         cf_desc.type = CU_FILE_HANDLE_TYPE_OPAQUE_FD;
         cuFileHandleRegister(&cf_handle, &cf_desc);
@@ -192,7 +198,7 @@ void DataSetGDS::read_images(std::string file_name,
         if (ret < 0) {
           printf("cuFileRead failed : %d\n", ret); 
         } 
-        cudaMemcpy(sys_len, gpumem_buf, metasize, cudaMemcpyDeviceToHost);
+        cudaMemcpy(sys_len, meta, metasize, cudaMemcpyDeviceToHost);
         // cuFileBufRegister((char*)meta, bufsize, 0);
         magic_number = this->reverse_int(((int*)sys_len)[0]);
         number_of_images = this->reverse_int(((int*)sys_len)[1]);
@@ -236,10 +242,9 @@ void DataSetGDS::read_images(std::string file_name,
 void DataSetGDS::read_labels(std::string file_name,
                           char * gpulbl_buf) {
     int fd;
-    int fd;
     int ret;
     
-  	fd = open(file_name, O_RDWR|O_DIRECT);
+  	fd = open(file_name.c_str(), O_RDWR|O_DIRECT);
 
     if (fd != -1) {
         int *sys_len;
@@ -259,7 +264,7 @@ void DataSetGDS::read_labels(std::string file_name,
         CUfileHandle_t cf_handle;
 
         cuFileDriverOpen();
-        fd = open(file_name, O_RDWR|O_DIRECT);
+        fd = open(file_name.c_str(), O_RDWR|O_DIRECT);
         cf_desc.handle.fd = fd;
         cf_desc.type = CU_FILE_HANDLE_TYPE_OPAQUE_FD;
         cuFileHandleRegister(&cf_handle, &cf_desc);
@@ -272,7 +277,7 @@ void DataSetGDS::read_labels(std::string file_name,
         if (ret < 0) {
           std::cout << "cuFileRead failed:" << ret << std::endl; 
         } 
-        cudaMemcpy(sys_len, gpumem_buf, metasize, cudaMemcpyDeviceToHost);
+        cudaMemcpy(sys_len, meta, metasize, cudaMemcpyDeviceToHost);
         // magic_number = reverse_int(((int*)sys_len)[0]);
         // number_of_images = reverse_int(((int*)sys_len)[1]);
         magic_number = this->reverse_int(magic_number);
@@ -296,7 +301,7 @@ void DataSetGDS::read_labels(std::string file_name,
           cuFileHandleRegister(&cf_handle, &cf_desc);
           cuFileBufRegister((char*)gpulbl_buf, bufsize, 0);
 
-          ret = cuFileRead(cf_handle, (char*)gpuimg_lbl, number_of_images, file_offset, mem_offset);
+          ret = cuFileRead(cf_handle, (char*)gpulbl_buf, number_of_images, file_offset, mem_offset);
 
           cuFileDriverClose();
         }
