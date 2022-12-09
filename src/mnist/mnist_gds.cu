@@ -1,4 +1,4 @@
-#include <mnist.cuh>
+#include <mnist_gds.cuh>
 
 Minist::Minist(std::string minst_data_path, float learning_rate, float l2,
                float beta) {

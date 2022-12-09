@@ -24,7 +24,8 @@
 #include <vector>
 
 #include <dataset_gds.cuh>
-#include <layer.cuh>
+#include <layer_gds.cuh>
+#include <mnist_gds.cuh>
 
 //   This example computes the norm [1] of a vector.  The norm is 
 // computed by squaring all numbers in the vector, summing the 
@@ -339,9 +340,14 @@ void test_transform()
 
 int main(int argc, char *argv[])
 {
+	clock_t start, end;
+	start = clock();
+    int idx = 1;
+    float time_epoch_fd, time_epoch_bd;
+	clock_t start_e;	
 
 	/* First argument is executable name only */
-	printf("\nexe name=%s", argv[0]);
+	printf("\nexe name=%s\n", argv[0]);
 
 	int opt = 0;
 	int epochs = EPOCHS;
@@ -364,54 +370,33 @@ int main(int argc, char *argv[])
 		}
 
 	}
-	if (sizelen(filename) < 0) {
+	if (sizeof(filename) < 0) {
 		std::cout << "please provide the location of training data" << std::endl; 
-		exit();
+		exit(1);
 	}
 
 	std::cout << "data folder: " << filename <<  std::endl; 
 		
 	std::unique_ptr<DataSetGDS> dataset;
-    dataset.reset(new DataSetGDS(argv[1], false));
+    // dataset.reset(new DataSetGDS(argv[1], false));
+	Minist mnist(filename, LEARNING_RATE, L2, BETA);
 
 	// test(argv[1]);
 	// char * mnist_data="/home/steven/dev/DataLoaders_DALI/cuda-neural-network/build/mnist_data/train-images-idx3-ubyte";
 	// test_stream(argv[1]);
 	// test_numpy(argv[1]);
 	// test_transform();
-	clock_t start, end;
-	start = clock();
-    int idx = 1;
-    float time_epoch_fd, time_epoch_bd;
-	clock_t start_e;	
-	int batch_size = 256;
 
-    while (dataset->has_next(true)) {
-   	  start_e = clock();  
-      dataset->forward(batch_size, true);
-	  const GDSStorage* labels = dataset->get_label();
+    // while (dataset->has_next(true)) {
+   	//   start_e = clock();  
+    //   dataset->forward(batch_size, true);
+	//   const GDSStorage* labels = dataset->get_label();
 
-      time_epoch_fd = (clock() - start_e) * 1000000 / CLOCKS_PER_SEC;
+    //   time_epoch_fd = (clock() - start_e) * 1000000 / CLOCKS_PER_SEC;
 
-   	  start_e = clock();  
-      dataset->backward();
-      time_epoch_bd = (clock() - start_e) * 1000000 / CLOCKS_PER_SEC;
-    //   rmsprop->step();
-
-    //   if (idx % 10 == 0) {
-    //     float loss = this->nll_loss->get_output()->get_data()[0];
-    //     auto acc = top1_accuracy(this->log_softmax->get_output()->get_data(),
-    //                              10, this->dataset->get_label()->get_data());
-
-    //     std::cout << "Epoch: " << epoch << ", Batch: " << idx
-    //               << ", NLLLoss: " << loss
-    //               << ", Train Accuracy: " << (float(acc.first) / acc.second)
-    //               << ", Train time (micro-s): " << time_epoch_fd + time_epoch_bd
-    //               << "\n   forwards: " << time_epoch_fd 
-    //               << "\n    backwards: " << time_epoch_bd 
-    //               << std::endl;
-    //   }
-    //   ++idx;
-    }
+   	//   start_e = clock();  
+    //   dataset->backward();
+    //   time_epoch_bd = (clock() - start_e) * 1000000 / CLOCKS_PER_SEC;
+    // }
 
 }
