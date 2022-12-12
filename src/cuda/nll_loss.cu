@@ -1,10 +1,10 @@
 ﻿#include <memory>
-#include <nll_loss.cuh>
+#include <nll_loss_gds.cuh>
 
 // L = mean(sum(-log_P element_mul Y, 1), 0)
 void operator_nll_loss(
-    const Storage *log_p, const Storage *y, Storage *output,
-    std::unordered_map<std::string, std::unique_ptr<Storage>> &temp) {
+    const GDSStorage *log_p, const GDSStorage *y, GDSStorage *output,
+    std::unordered_map<std::string, std::unique_ptr<GDSStorage>> &temp) {
   INIT_TEMP(temp, "nll_loss_batch", y->get_shape());
   operator_mul(log_p, y, temp["nll_loss_batch"].get());
 
@@ -18,21 +18,21 @@ void operator_nll_loss(
 
 // L = 1_n^T * ((-log_P element_mul Y) * 1_k) / N
 // dL/d(log_P) = -Y / N
-void operator_d_nll_loss(const Storage *y, Storage *inputs_grad) {
+void operator_d_nll_loss(const GDSStorage *y, GDSStorage *inputs_grad) {
   int batch_size = *y->get_shape().begin();
   operator_mul(y, (float)-1 / batch_size, inputs_grad);
 }
 
-void NLLLoss::forward(const Storage *y) {
-  const Storage *input = this->pre->get_output();
+void NLLLoss::forward(const GDSStorage *y) {
+  const GDSStorage *input = this->pre->get_output();
   this->y = y;
 
   operator_nll_loss(input, y, this->output.get(), this->temp);
 }
 
 void NLLLoss::backward() {
-  const Storage *input = this->pre->get_output();
+  const GDSStorage *input = this->pre->get_output();
 
-  INIT_STORAGE(this->grad, input->get_shape());
+  INIT_GDSStorage(this->grad, input->get_shape());
   operator_d_nll_loss(this->y, this->grad.get());
 }

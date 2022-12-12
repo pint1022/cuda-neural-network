@@ -26,6 +26,7 @@
 #include <dataset_gds.cuh>
 #include <layer_gds.cuh>
 #include <mnist_gds.cuh>
+#include "gds_test.cuh"
 
 //   This example computes the norm [1] of a vector.  The norm is 
 // computed by squaring all numbers in the vector, summing the 
@@ -221,6 +222,9 @@ void test(char * file_name) {
 	cuFileDriverClose();
 }
 
+//
+// test cufile read with numpy formatted image data
+//
 void test_numpy(char * file_name) {
 	int fd;
 	int ret;
@@ -331,6 +335,7 @@ void test_transform()
 }
 
 
+
 #define BATCH_SIZE 128
 #define LEARNING_RATE 0.003
 #define L2 0.0001
@@ -378,8 +383,9 @@ int main(int argc, char *argv[])
 	std::cout << "data folder: " << filename <<  std::endl; 
 		
 	std::unique_ptr<DataSetGDS> dataset;
-    // dataset.reset(new DataSetGDS(argv[1], false));
-	Minist mnist(filename, LEARNING_RATE, L2, BETA);
+    dataset.reset(new DataSetGDS(argv[1], false));
+	test_operator_add(dataset)
+	// Minist mnist(filename, LEARNING_RATE, L2, BETA);
 
 	// test(argv[1]);
 	// char * mnist_data="/home/steven/dev/DataLoaders_DALI/cuda-neural-network/build/mnist_data/train-images-idx3-ubyte";

@@ -7,17 +7,17 @@
 #include <time.h>
 #include <thrust/system/cuda/experimental/pinned_allocator.h>
 #include <thrust/host_vector.h>
-#include <blas.cuh>
-#include <conv.cuh>
+#include <blas_gds.cuh>
+#include <conv_gds.cuh>
 #include <dataset_gds.cuh>
 #include <flatten.cuh>
 #include <linear.cuh>
 #include <max_pool.cuh>
-#include <nll_loss.cuh>
-#include <relu.cuh>
-#include <rmsprop.cuh>
-#include <softmax.cuh>
-#include <storage.cuh>
+#include <nll_loss_gds.cuh>
+// #include <relu.cuh>
+// #include <rmsprop.cuh>
+#include <softmax_gds.cuh>
+#include <storage_gds.cuh>
 
 class Minist {
  public:
@@ -32,12 +32,10 @@ class Minist {
   void backward();                              // neural network backward
 
   std::pair<int, int> top1_accuracy(
-      const thrust::host_vector<
-          float, thrust::system::cuda::experimental::pinned_allocator<float>>&
+      const char*
           probs,
       int cls_size,
-      const thrust::host_vector<
-          float, thrust::system::cuda::experimental::pinned_allocator<float>>&
+      const char *
           labels);  // top1_accuracy
 
   // Conv1_5x5     1 * 32
@@ -50,26 +48,26 @@ class Minist {
   // LogSoftMax
   // NLLLoss
 
-  std::unique_ptr<RMSProp> rmsprop;
-  std::unique_ptr<GDSDataSet> dataset;
+//   std::unique_ptr<RMSProp> rmsprop;
+  std::unique_ptr<DataSetGDS> dataset;
 
   std::unique_ptr<Conv> conv1;
-  std::unique_ptr<ReLU> conv1_relu;
-  std::unique_ptr<MaxPool> max_pool1;
+//   std::unique_ptr<ReLU> conv1_relu;
+//   std::unique_ptr<MaxPool> max_pool1;
 
-  std::unique_ptr<Conv> conv2;
-  std::unique_ptr<ReLU> conv2_relu;
-  std::unique_ptr<MaxPool> max_pool2;
+//   std::unique_ptr<Conv> conv2;
+//   std::unique_ptr<ReLU> conv2_relu;
+//   std::unique_ptr<MaxPool> max_pool2;
 
-  std::unique_ptr<Conv> conv3;
-  std::unique_ptr<ReLU> conv3_relu;
-  std::unique_ptr<Flatten> flatten;
+//   std::unique_ptr<Conv> conv3;
+//   std::unique_ptr<ReLU> conv3_relu;
+//   std::unique_ptr<Flatten> flatten;
 
-  std::unique_ptr<Linear> fc1;
-  std::unique_ptr<ReLU> fc1_relu;
+//   std::unique_ptr<Linear> fc1;
+//   std::unique_ptr<ReLU> fc1_relu;
 
-  std::unique_ptr<Linear> fc2;
-  std::unique_ptr<ReLU> fc2_relu;
+//   std::unique_ptr<Linear> fc2;
+//   std::unique_ptr<ReLU> fc2_relu;
   std::unique_ptr<LogSoftmax> log_softmax;
   std::unique_ptr<NLLLoss> nll_loss;
 };

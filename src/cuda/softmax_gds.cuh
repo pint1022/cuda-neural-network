@@ -12,7 +12,7 @@ void operator_d_log_softmax(const GDSStorage *output_grads, const GDSStorage *in
 
 #endif  // DEBUG
 
-class LogSoftmax : public Layer{
+class LogSoftmax : public GDSLayer{
  public:
   explicit LogSoftmax(int dim = 1) : dim(dim) {}
   void forward();

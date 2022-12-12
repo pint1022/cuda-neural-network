@@ -15,7 +15,7 @@ void operator_d_sigmoid(
 
 #endif  // DEBUG
 
-class Sigmoid : public Layer {
+class Sigmoid : public GDSLayer {
  public:
   void forward();
   void backward();

@@ -35,7 +35,7 @@ void operator_d_conv_bias(
 
 #endif
 
-class Conv : public Layer {
+class Conv : public GDSLayer {
  public:
   explicit Conv(int height, int width, int channel_in, int channel_out,
                 int kernel_h, int kernel_w, int pad_h, int pad_w, int stride_h,
