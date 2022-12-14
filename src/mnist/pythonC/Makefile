@@ -10,7 +10,7 @@ CUDA_LIBDIRS=-L /usr/local/cuda/targets/x86_64-linux/lib/ -lcufile -L /usr/local
 
 .PHONY: all build test clean
 
-all: build
+all: build libgdsunittests.a
 	CC=g++ LDSHARED='$(shell python configure.py)' python setup.py build
 	python setup.py install
 	# python tests/test.py
@@ -18,13 +18,21 @@ all: build
 install:
 	python setup.py install
 
-build:
-	$(NVCC) -rdc=true --compiler-options '-fPIC' $(CUDA_INCDIRS) -c -o temp.o ../test/gds_add_unit_test.cu
-	$(NVCC) -dlink --compiler-options '-fPIC' -o gds_add_unit_test.o temp.o $(CUDA_LIBDIRS) 
+libgdsunittests.a: gds_add_unit_test.o gds_readimg_unit_test.o
 	rm -f libgdsunittests.a
-	ar cru libgdsunittests.a gds_add_unit_test.o temp.o
+	ar cru libgdsunittests.a gds_add_unit_test.o gds_readimg_unit_test.o
 	ranlib libgdsunittests.a
 
+gds_add_unit_test.o:  ../test/gds_add_unit_test.cu
+	$(NVCC) -rdc=true --compiler-options '-fPIC' $(CUDA_INCDIRS) -c -o temp_add.o ../test/gds_add_unit_test.cu
+	$(NVCC) -dlink --compiler-options '-fPIC' -o gds_add_unit_test.o temp_add.o $(CUDA_LIBDIRS) 
+
+gds_readimg_unit_test.o:  ../test/gds_readimg_unit_test.cu
+	$(NVCC) -rdc=true --compiler-options '-fPIC' $(CUDA_INCDIRS) -c -o temp_readimg.o ../test/gds_readimg_unit_test.cu
+	$(NVCC) -dlink --compiler-options '-fPIC' -o gds_readimg_unit_test.o temp_readimg.o $(CUDA_LIBDIRS) 
 
 clean:
 	rm -rf *.out *.bin *.exe *.o *.a *.so *.png *.a test build
+
+sanity:
+	python test.py

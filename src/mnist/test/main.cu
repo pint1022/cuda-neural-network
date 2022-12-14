@@ -239,7 +239,6 @@ void test_numpy(char * file_name) {
 	off_t mem_offset = 0;
 	int metasize=16;
 
-	sys_len = (int*)malloc(parasize);
 
 	CUfileDescr_t cf_desc; 
 	CUfileHandle_t cf_handle;
@@ -268,6 +267,7 @@ void test_numpy(char * file_name) {
 		printf("ret %d\n", ret);
 	}
 
+	sys_len = (int*)malloc(parasize);
 	cudaMemcpy(sys_len, meta, metasize, cudaMemcpyDeviceToHost);
 	magic_number = reverse_int(((int*)sys_len)[0]);
 	number_of_images = reverse_int(((int*)sys_len)[1]);
@@ -281,7 +281,6 @@ void test_numpy(char * file_name) {
 	std::cout << "cols = " << n_cols << std::endl;
 	bufsize = n_rows * n_cols * sizeof(char) * number_of_images;
 
-	cudaFree(gpumem_buf);
 
 	cudaMalloc(&gpumem_buf, bufsize);
 	file_offset = 4 * sizeof(int);
