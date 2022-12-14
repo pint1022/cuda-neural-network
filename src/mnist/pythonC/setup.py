@@ -5,6 +5,7 @@ func_files = [
        'stddev_unit_test.cpp',
        'bind.cpp'
        ]
+
 module1 = Extension('unittests',
                     sources =func_files)
 
