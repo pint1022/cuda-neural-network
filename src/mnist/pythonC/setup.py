@@ -1,15 +1,21 @@
+import os
 from distutils.core import setup, Extension
+
+if 'CUDA_PATH' in os.environ:
+   CUDA_PATH = os.environ['CUDA_PATH']
+else:
+   print("Could not find CUDA_PATH in environment variables. Defaulting to /usr/local/cuda!")
+   CUDA_PATH = "/usr/local/cuda/"
 
 func_files = [
        'gds_unit_test.cpp', 
-       'stddev_unit_test.cpp',
        'bind.cpp'
        ]
 
 module1 = Extension('unittests',
                     sources =func_files,
-                    libraries=["gdsunittests"],
-              library_dirs = ["."])
+                    libraries=["gdsunittests", "cudart", "cufile"],
+              library_dirs = [".", os.path.join(CUDA_PATH, "lib64")])
 
 setup (name = 'PackageName',
        version = '1.0',
@@ -23,3 +29,4 @@ setup (name = 'PackageName',
 #       libraries=["vectoradd", "cudart"],
 #       library_dirs = [".", os.path.join(CUDA_PATH, "lib64")]
 # )])
+

@@ -3,12 +3,12 @@
 #include <vector>
 #include <numeric>
 #include <iterator>
-// #include "gds_unit_test.h"
+#include "gds_unit_test.h"
 #include "gds_func_ops.h"
 
 PyObject *unitTestError;
 
-static PyObject *
+PyObject *
 gds_system(PyObject *self, PyObject *args)
 {
     const char *command;
@@ -24,7 +24,7 @@ gds_system(PyObject *self, PyObject *args)
     return PyLong_FromLong(sts);
 }
 
-static PyObject * 
+PyObject * 
 add(PyObject *self, PyObject *args) 
 {
 	int num1, num2;
@@ -41,7 +41,7 @@ add(PyObject *self, PyObject *args)
 	return Py_BuildValue("is", num1 + num2, eq);
 }
 
-static PyObject * std_standard_dev(PyObject *self, PyObject* args)
+PyObject * std_standard_dev(PyObject *self, PyObject* args)
 {
     PyObject* input;
     

@@ -1,8 +1,7 @@
-#define PY_SSIZE_T_CLEAN
-#include "gds_func_ops.h"
-// #include <vector>
-// #include <numeric>
-// #include <iterator>
+#include <vector>
+#include <numeric>
+#include <iterator>
+
 
 double standardDeviation(std::vector<double> v)
 {
@@ -12,4 +11,5 @@ double standardDeviation(std::vector<double> v)
         v.begin(), v.end(), v.begin(), 0.0);
     return sqrt(squareSum / v.size() - mean * mean);
 }
+
 

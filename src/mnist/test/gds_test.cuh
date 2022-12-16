@@ -15,3 +15,4 @@
 int test_operator_add(std::unique_ptr<DataSetGDS> gds, std::unique_ptr<DataSet> pty);
 float * read_image(char * minst_data_path, int length);
 char * read_label(char * minst_data_path, int length);
+double standardDeviation(std::vector<double> v);
