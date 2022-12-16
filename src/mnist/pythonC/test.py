@@ -38,9 +38,9 @@ def test_system():
     gds.system("ls -l")
 
 def test_add():
-    print(gds.add(5, 6))
+    print(gds.add(5, 6, 'testfile'))
 
-# test_stddev()
+test_stddev()
 test_system()
 test_add()
 
