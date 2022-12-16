@@ -1,5 +1,7 @@
 import os
 from distutils.core import setup, Extension
+from Cython.Build import cythonize
+import numpy
 
 if 'CUDA_PATH' in os.environ:
    CUDA_PATH = os.environ['CUDA_PATH']
@@ -15,7 +17,8 @@ func_files = [
 module1 = Extension('unittests',
                     sources =func_files,
                     libraries=["gdsunittests", "cudart", "cufile"],
-              library_dirs = [".", os.path.join(CUDA_PATH, "lib64")])
+              library_dirs = [".", os.path.join(CUDA_PATH, "lib64")],
+              include_dirs=[numpy.get_include()])
 
 setup (name = 'PackageName',
        version = '1.0',

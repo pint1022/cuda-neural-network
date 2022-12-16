@@ -6,5 +6,5 @@
 PyObject * add(PyObject *, PyObject *);
 PyObject * gds_system(PyObject *self, PyObject *args);
 PyObject * std_standard_dev(PyObject *self, PyObject* args);
-// static PyObject * test_read_image(PyObject* self, PyObject* args)
+PyObject * test_read_image(PyObject* self, PyObject* args);
 #endif

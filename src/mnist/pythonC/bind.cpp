@@ -19,10 +19,11 @@
 char system_docs[] = "call shell command by 'system'.  import gds_unittest as gds gds.system(\'ls -l\') ";
 char addfunc_docs[] = "Add two numbers function.";
 char stddevfunc_docs[] = "Return the standard deviation of a list.";
+char gds_readimage_docs[] = "Read a batch of data from imagefile(mnist).";
 
-PyObject *initError;
+static PyObject *initError;
 
-PyMethodDef unittest_funcs[] = {
+static PyMethodDef unittest_funcs[] = {
 	{	"system",
 		(PyCFunction)gds_system,
 		METH_VARARGS,
@@ -35,12 +36,16 @@ PyMethodDef unittest_funcs[] = {
 		(PyCFunction)std_standard_dev,
 		METH_VARARGS,
 		stddevfunc_docs},
+	{	"gds_read_image",
+		(PyCFunction)test_read_image,
+		METH_VARARGS,
+		gds_readimage_docs},
 	{	NULL}
 };
 
 char gds_unittest_docs[] = "This is a set of unit tests for gas-ai.";
 
-PyModuleDef unittests_mod = {
+static PyModuleDef unittests_mod = {
 	PyModuleDef_HEAD_INIT,
 	"unittests",
 	gds_unittest_docs,

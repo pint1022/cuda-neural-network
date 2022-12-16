@@ -5,8 +5,9 @@
 #include <iterator>
 #include "gds_unit_test.h"
 #include "gds_func_ops.h"
+#include <numpy/arrayobject.h>
 
-PyObject *unitTestError;
+static PyObject *unitTestError;
 
 PyObject *
 gds_system(PyObject *self, PyObject *args)
@@ -41,7 +42,8 @@ add(PyObject *self, PyObject *args)
 	return Py_BuildValue("is", num1 + num2, eq);
 }
 
-PyObject * std_standard_dev(PyObject *self, PyObject* args)
+PyObject * 
+std_standard_dev(PyObject *self, PyObject* args)
 {
     PyObject* input;
     
@@ -60,21 +62,22 @@ PyObject * std_standard_dev(PyObject *self, PyObject* args)
     return PyFloat_FromDouble(standardDeviation(list));
 }
 
-// static PyObject* test_read_image(PyObject* self, PyObject* args) {
-//     char * datafile;
-//     int length;
-//     float * output;
+PyObject* 
+test_read_image(PyObject* self, PyObject* args) {
+    char * datafile;
+    int length;
+    float * output;
 
-//     if (!PyArg_ParseTuple(args, "si", &datafile, &length))
-//         return NULL;
-
-
-//     printf("datafile: %s, length: %d\n", datafile, length);
+    if (!PyArg_ParseTuple(args, "si", &datafile, &length))
+        return NULL;
 
 
-//     output =  read_image(datafile, length);
-//     int dims[1];
-//     dims[0] = length;
-//     return PyArray_SimpleNewFromData(1, dims, PyArray_TYPE(output), output);
+    printf("datafile: %s, length: %d\n", datafile, length);
 
-// }
+
+    output =  read_image(datafile, length);
+    npy_intp dims[1];
+    dims[0] = length;
+    return PyArray_SimpleNewFromData(1, dims, PyArray_TYPE(output), output);
+
+}
