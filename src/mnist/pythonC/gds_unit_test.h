@@ -3,7 +3,8 @@
 
 #include <Python.h>
 
-PyObject * add(PyObject *, PyObject *);
-PyObject * gds_system(PyObject *self, PyObject *args);
-PyObject * std_standard_dev(PyObject *self, PyObject* args);
+static PyObject * add(PyObject *, PyObject *);
+static PyObject * gds_system(PyObject *self, PyObject *args);
+static PyObject * std_standard_dev(PyObject *self, PyObject* args);
+// static PyObject * test_read_image(PyObject* self, PyObject* args)
 #endif

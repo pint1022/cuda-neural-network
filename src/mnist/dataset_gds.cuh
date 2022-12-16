@@ -24,7 +24,13 @@ class DataSetGDS : public GDSLayer {
 
   int get_height() { return this->height; }
   int get_width() { return this->width; }
-  GDSStorage* get_label() { return this->output_label.get(); }
+  char* get_label() { return this->output_label->get_data(); }
+  //
+  // for unit testing
+  //
+  char* get_train_data() { return this->train_data; }
+  char* get_train_label() { return this->train_label; }
+  //
 
   void print_im();
 
