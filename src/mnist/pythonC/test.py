@@ -40,7 +40,13 @@ def test_system():
 def test_add():
     print(gds.add(5, 6, 'testfile'))
 
+def test_readimg():
+    batch_size = 256
+    mnist_data = "/home/steven/dev/DataLoaders_DALI/cuda-neural-network/build/mnist_data/train-images-idx3-ubyte"
+    data = gds.gds_read_image_data(mnist_data, batch_size)
+    print(data)
+
 test_stddev()
 test_system()
 test_add()
-
+test_readimg()

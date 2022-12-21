@@ -20,6 +20,7 @@ char system_docs[] = "call shell command by 'system'.  import gds_unittest as gd
 char addfunc_docs[] = "Add two numbers function.";
 char stddevfunc_docs[] = "Return the standard deviation of a list.";
 char gds_readimage_docs[] = "Read a batch of data from imagefile(mnist).";
+char gds_readimagedata_docs[] = "Read a batch of data from imagefile(mnist). It returns the rows and columns of image";
 
 static PyObject *initError;
 
@@ -38,6 +39,10 @@ static PyMethodDef unittest_funcs[] = {
 		stddevfunc_docs},
 	{	"gds_read_image",
 		(PyCFunction)test_read_image,
+		METH_VARARGS,
+		gds_readimage_docs},
+	{	"gds_read_image_data",
+		(PyCFunction)test_read_image_data,
 		METH_VARARGS,
 		gds_readimage_docs},
 	{	NULL}

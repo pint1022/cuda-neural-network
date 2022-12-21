@@ -81,3 +81,28 @@ test_read_image(PyObject* self, PyObject* args) {
     return PyArray_SimpleNewFromData(1, dims, PyArray_TYPE(output), output);
 
 }
+
+PyObject* 
+test_read_image_data(PyObject* self, PyObject* args) {
+    char * datafile;
+    int length;
+    char * output;
+
+    if (!PyArg_ParseTuple(args, "si", &datafile, &length))
+        return NULL;
+
+
+    int col, row;
+    int ret =  read_image_data(datafile, length, output, &row, &col);
+    npy_intp dims[3]; //B R W 
+    
+    printf("batchsize: %d, rows: %d, cols: %d\n", length,  row , col);
+
+    if (ret > 0) {
+        dims[0] = ret;
+        dims[1] = row;
+        dims[2] = col;
+    }
+    return PyArray_SimpleNewFromData(1, dims, PyArray_TYPE(output), output);
+
+}
