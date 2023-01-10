@@ -1,4 +1,13 @@
 #include <mnist.cuh>
+    // model = Sequential()
+    // model.add(Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', input_shape=(28, 28, 1)))
+    // model.add(MaxPooling2D((2, 2)))
+    // model.add(Flatten())
+    // model.add(Dense(100, activation='relu', kernel_initializer='he_uniform'))
+    // model.add(Dense(10, activation='softmax'))
+    // # compile model
+    // opt = SGD(learning_rate=0.01, momentum=0.9)
+    // model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
 
 Minist::Minist(std::string minst_data_path, float learning_rate, float l2,
                float beta) {
