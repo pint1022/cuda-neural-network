@@ -8,4 +8,6 @@ PyObject * gds_system(PyObject *self, PyObject *args);
 PyObject * std_standard_dev(PyObject *self, PyObject* args);
 PyObject * test_read_image(PyObject* self, PyObject* args);
 PyObject* test_read_image_data(PyObject* self, PyObject* args);
+PyObject* test_read_numpy(PyObject* self, PyObject* args);
+
 #endif

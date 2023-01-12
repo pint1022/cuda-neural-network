@@ -16,6 +16,6 @@ int test_operator_add(std::unique_ptr<DataSetGDS> gds, std::unique_ptr<DataSet> 
 float * read_image(char * minst_data_path, int length);
 char * read_label(char * minst_data_path, int length);
 double standardDeviation(std::vector<double> v);
-void test_numpy(char * file_name);
-int read_image_data(char * minst_data_path, unsigned int batchsize, char* data);
+// void test_numpy(char * file_name);
 int read_image_data(char * minst_data_path, unsigned int batchsize, char* data, int* rows, int * cols);
+int read_numpy(char * file_name, int batchsize, int* rows, int * cols);

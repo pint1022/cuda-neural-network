@@ -45,6 +45,10 @@ static PyMethodDef unittest_funcs[] = {
 		(PyCFunction)test_read_image_data,
 		METH_VARARGS,
 		gds_readimage_docs},
+	{	"gds_read_numpy",
+		(PyCFunction)test_read_numpy,
+		METH_VARARGS,
+		gds_readimage_docs},
 	{	NULL}
 };
 
