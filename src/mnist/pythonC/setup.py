@@ -10,7 +10,7 @@ else:
    CUDA_PATH = "/usr/local/cuda/"
 
 func_files = [
-       'gds_unit_test.cpp', 
+      #  'gds_unit_test.cpp', 
        'bind.cpp'
        ]
 

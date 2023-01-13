@@ -123,7 +123,7 @@ void test_transform()
 }
 
 
-int read_image_data(char * file_name, unsigned int batchsize, char* data, int* row, int *col) {
+int read_image_data(char * file_name, unsigned int batchsize, char** data, int* row, int *col) {
 	int fd;
 	int ret;
 	char *gpumem_buf, *meta;
@@ -192,8 +192,8 @@ int read_image_data(char * file_name, unsigned int batchsize, char* data, int* r
 	if (ret < 0) {
 		printf("cuFileRead failed : %d\n", ret); 
 	} else {
-		cudaMalloc(&data, length + 1);
-		cudaMemcpy(data, gpumem_buf, length, cudaMemcpyDeviceToHost);
+		*data = (char*) malloc(bufsize + 1);
+		cudaMemcpy(*data, gpumem_buf, bufsize, cudaMemcpyDeviceToHost);
 		ret = length;
 		*row = n_rows;
 		*col = n_cols;
@@ -211,7 +211,7 @@ int read_image_data(char * file_name, unsigned int batchsize, char* data, int* r
 //
 // test cufile read with numpy formatted image data
 //
-int read_numpy(char * file_name, int length, int *row, int *col) {
+char* read_numpy(char * file_name, int length,  int *row, int *col) {
 	int fd;
 	int ret;
 	char *gpumem_buf, *meta;
@@ -275,10 +275,15 @@ int read_numpy(char * file_name, int length, int *row, int *col) {
 	cuFileBufRegister((char*)gpumem_buf, bufsize, 0);
 
 	ret = cuFileRead(cf_handle, (char*)gpumem_buf, bufsize, file_offset, mem_offset);
+
+	char * output = NULL;
 	if (ret < 0) {
 		printf("cuFileRead failed : %d\n", ret); 
 	} else {
-		printf("ret %d\n", ret);
+		printf("ret %d, copy data\n", ret);
+		output = (char*) malloc(bufsize + 1);
+		cudaMemcpy(output, gpumem_buf, bufsize, cudaMemcpyDeviceToHost);
+
 		ret = bufsize;
 		*row = n_rows;
 		*col = n_cols;		
@@ -289,5 +294,5 @@ int read_numpy(char * file_name, int length, int *row, int *col) {
 	close(fd);
 	cuFileDriverClose();
 
-	return bufsize;
+	return output;
 }
