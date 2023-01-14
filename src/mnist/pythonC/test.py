@@ -49,15 +49,21 @@ def test_readimg():
 def test_numpy():
     batch_size = 256
     mnist_data = "/home/steven/dev/DataLoaders_DALI/cuda-neural-network/build/mnist_data/train-images-idx3-ubyte"
-    data = gds.gds_read_numpy(mnist_data, batch_size)
-    # print("row: ", row, ", col: ", col)
+    row, col, data = gds.gds_read_numpy(mnist_data, batch_size)
+    print("row: ", row, ", col: ", col)
+    print(data)
 
+def test_abc():
+    for i in range(2):
+        a = np.random.uniform(low=-5, high=5, size=10000)
+        b = gds.adc3(a)
+        print(np.stack((a, b), axis=-1))
 #
 # basice testing
 #
 test_stddev()
-test_system()
-test_add()
+# test_system()
+# test_add()
 
 #
 # read images
@@ -68,3 +74,5 @@ test_add()
 #no return data test
 #
 test_numpy()
+
+# test_abc()

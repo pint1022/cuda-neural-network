@@ -121,20 +121,22 @@ test_read_numpy(PyObject* self, PyObject* args) {
     char* ret =  read_numpy(datafile, length,  &row, &col);
     // int ret =  read_image_data(datafile, length, output, &row, &col);
 
-    npy_intp dims[1]; //B R W 
+    npy_intp dims[3]; //B R W 
     
     printf("batchsize: %d, rows: %d, cols: %d\n", length,  row , col);
     if (ret != NULL) {
        dims[0] = length*row*col;
-    //    dims[1] = row;
-    //    dims[2] = col;        
+       dims[1] = row;
+       dims[2] = col;        
        printf("got data\n");
        outArray = (PyArrayObject *)PyArray_SimpleNewFromData(1, dims, NPY_INT, output);
        outArray->flags |= NPY_ARRAY_OWNDATA;
-       return PyArray_Return(outArray);        
+    //    return  Py_BuildValue("iiO", row, col, outArray);
+    //    return PyArray_Return(outArray);        
     //    free(ret);
-    } else
-       printf("ERROR: null return\n");
+    } else {
+       printf("ERROR: null return\n");        
+    }
 
     // return PyArray_Return(outArray);        
     // return Py_BuildValue("ii", row, col);
@@ -143,45 +145,47 @@ test_read_numpy(PyObject* self, PyObject* args) {
 
 }
 
-// static PyObject *
-// test_read_narray(PyObject *self, PyObject *args) {
-//   PyArrayObject *inArray = NULL, *outArray = NULL;
-//   double *pinp = NULL, *pout = NULL;
-//   npy_intp nelem;
-//   int dims[1], i, j;
+static PyObject *
+adc3(PyObject *self, PyObject *args) {
+  PyArrayObject *inArray = NULL, *outArray = NULL;
+  double *pinp = NULL, *pout = NULL;
+  npy_intp nelem;
+  npy_intp dims[1];
+  int i, j;
 
-//   /* Get arguments:  */
-//   if (!PyArg_ParseTuple(args, "O:adc3", &inArray))
-//     return NULL;
+  /* Get arguments:  */
+  if (!PyArg_ParseTuple(args, "O:adc3", &inArray))
+    return NULL;
 
-//   nelem = PyArray_DIM(inArray,0); /* size of the input array */
-//   pout = (double *) malloc(nelem*sizeof(double));
-//   pinp = (double *) PyArray_DATA(inArray);
+  nelem = PyArray_DIM(inArray,0); /* size of the input array */
+  pout = (double *) malloc(nelem*sizeof(double));
+  pinp = (double *) PyArray_DATA(inArray);
 
-//   /*   ADC action   */
-//   for (i = 0; i < nelem; i++) {
-//     if (pinp[i] >= -0.5) {
-//     if      (pinp[i] < 0.5)   pout[i] = 0;
-//     else if (pinp[i] < 1.5)   pout[i] = 1;
-//     else if (pinp[i] < 2.5)   pout[i] = 2;
-//     else if (pinp[i] < 3.5)   pout[i] = 3;
-//     else                      pout[i] = 4;
-//     }
-//     else {
-//     if      (pinp[i] >= -1.5) pout[i] = -1;
-//     else if (pinp[i] >= -2.5) pout[i] = -2;
-//     else if (pinp[i] >= -3.5) pout[i] = -3;
-//     else                      pout[i] = -4;
-//     }
-//   }
+  /*   ADC action   */
+  for (i = 0; i < nelem; i++) {
+    if (pinp[i] >= -0.5) {
+    if      (pinp[i] < 0.5)   pout[i] = 0;
+    else if (pinp[i] < 1.5)   pout[i] = 1;
+    else if (pinp[i] < 2.5)   pout[i] = 2;
+    else if (pinp[i] < 3.5)   pout[i] = 3;
+    else                      pout[i] = 4;
+    }
+    else {
+    if      (pinp[i] >= -1.5) pout[i] = -1;
+    else if (pinp[i] >= -2.5) pout[i] = -2;
+    else if (pinp[i] >= -3.5) pout[i] = -3;
+    else                      pout[i] = -4;
+    }
+  }
 
-//   dims[0] = nelem;
+  dims[0] = nelem;
 
-//   outArray = (PyArrayObject *)
-//                PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, pout);
-//   //Py_INCREF(outArray);
-//   return PyArray_Return(outArray); 
-// } 
+  outArray = (PyArrayObject *)
+               PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, pout);
+  PyArray_ENABLEFLAGS(outArray, NPY_ARRAY_OWNDATA);    
+  //Py_INCREF(outArray);
+  return PyArray_Return(outArray); 
+} 
 
 // static PyMethodDef SpamMethods[] = {
 //     {"system",  gds_system, METH_VARARGS,
@@ -204,7 +208,7 @@ char addfunc_docs[] = "Add two numbers function.";
 char stddevfunc_docs[] = "Return the standard deviation of a list.";
 char gds_readimage_docs[] = "Read a batch of data from imagefile(mnist).";
 char gds_readimagedata_docs[] = "Read a batch of data from imagefile(mnist). It returns the rows and columns of image";
-char gds_read_narray_docs[] = "Input and output narray";
+char gds_read_narray_docs[] = "n-bit Analog-to-Digital Converter (ADC)";
 
 static PyObject *initError;
 
@@ -233,10 +237,10 @@ static PyMethodDef unittest_funcs[] = {
 		(PyCFunction)test_read_numpy,
 		METH_VARARGS,
 		gds_readimage_docs},
-	// {	"gds_read_narray",
-	// 	(PyCFunction)test_read_narray,
-	// 	METH_VARARGS,
-	// 	gds_read_narray_docs},
+	{	"adc3",
+		(PyCFunction)adc3,
+		METH_VARARGS,
+		gds_read_narray_docs},
 	{	NULL}
 };
 
@@ -263,6 +267,7 @@ PyInit_unittests(void)
     if (m == NULL)
         return NULL;
 
+    import_array();  // for NumPy
     initError = PyErr_NewException("GAS unit test.error", NULL, NULL);
     Py_XINCREF(initError);
     if (PyModule_AddObject(m, "error", initError) < 0) {
@@ -275,3 +280,8 @@ PyInit_unittests(void)
     return m;
 }
 
+
+// PyMODINIT_FUNC initmwa()  {
+//     Py_InitModule("mwa", mwa_methods);
+//     import_array();  // for NumPy
+// }
