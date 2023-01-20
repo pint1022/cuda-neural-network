@@ -38,6 +38,7 @@ def test_system():
     gds.system("ls -l")
 
 def test_add():
+    print("test add function")
     print(gds.add(5, 6, 'testfile'))
 
 def test_readimg():
@@ -63,7 +64,7 @@ def test_abc():
 #
 test_stddev()
 # test_system()
-# test_add()
+test_add()
 
 #
 # read images
@@ -73,6 +74,7 @@ test_stddev()
 #
 #no return data test
 #
-test_numpy()
+# test_numpy()
 
 # test_abc()
+# test_mnist_train()

@@ -6,7 +6,7 @@ CUDAFLAGS= -std=c++14 -c -arch=sm_80 -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM
 
 CUDA_INCDIRS=-I /usr/local/cuda/include/  -I /usr/local/cuda/targets/x86_64-linux/lib/ -I../../cuda -I../test -I../ 
 CUDA_LIBDIRS=-L /usr/local/cuda/targets/x86_64-linux/lib/ -lcufile -L /usr/local/cuda/lib64/ -lcuda -L   -Bstatic -L /usr/local/cuda/lib64/ 
-LIBS= -lopenblas -lpthread -lcublas -ldl -lcudart_static -lrt -lcufile -lcuda  -L -Bstatic
+LIBS= -lopenblas -lpthread -lcublas -ldl -lcudart_static -lrt -lcufile -lcuda -L   -Bstatic -L /usr/local/cuda/lib64/ -lcudart_static -lrt -lpthread -ldl 
 
 .PHONY: all build test clean
 
