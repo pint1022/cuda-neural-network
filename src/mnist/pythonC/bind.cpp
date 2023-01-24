@@ -2,7 +2,9 @@
 #include <Python.h>
 #include "gds_func_ops.h"
 #include <numpy/arrayobject.h>
+
 #include "util_func.cuh"
+#include "cublas_func.cuh"
 
 static PyObject *unitTestError;
 
@@ -225,6 +227,42 @@ matmul(PyObject *self, PyObject *args) {
   return PyArray_Return(CArray); 
 } 
 
+static PyObject *
+b_matmul(PyObject *self, PyObject *args) {
+  PyArrayObject *AArray = NULL,  *BArray = NULL, *CArray = NULL;
+  double *pA = NULL, *pB = NULL, *pC = NULL;
+  npy_intp nelem;
+  npy_intp dims[2];
+  int i, j;
+  int A_row, A_col, B_row, B_col;
+
+  /* Get arguments:  */
+  if (!PyArg_ParseTuple(args, "OOiiii:matmul", &AArray, &BArray, &A_row, &A_col, &B_row, &B_col))
+    return NULL;
+
+  nelem = PyArray_DIM(AArray,0); /* size of the input array */
+  int c_size = A_row * B_col;
+  pC = (double *) malloc(c_size*sizeof(double));
+  pA = (double *) PyArray_DATA(AArray);
+  pB = (double *) PyArray_DATA(BArray);
+
+  std::cout << "A:" << A_row << "x" << A_col << ", C size: " << c_size << std::endl;
+
+//
+// flag
+// 0: tiled
+// 1: thrust
+//
+  perform_matmul(pA, pB, pC, A_row, A_col, B_row, B_col, 1);
+  dims[0] = A_row;
+  dims[1] = B_col;
+
+  CArray = (PyArrayObject *)
+               PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, pC);
+//   PyArray_ENABLEFLAGS(CArray, NPY_ARRAY_OWNDATA);    
+  //Py_INCREF(outArray);
+  return PyArray_Return(CArray); 
+} 
 
 char system_docs[] = "call shell command by 'system'.  import gds_unittest as gds gds.system(\'ls -l\') ";
 char addfunc_docs[] = "Add two numbers function.";
@@ -234,6 +272,7 @@ char gds_readimagedata_docs[] = "Read a batch of data from imagefile(mnist). It 
 char gds_read_narray_docs[] = "n-bit Analog-to-Digital Converter (ADC)";
 
 char gds_matmul_docs[] = "matrix matmul op";
+char gds_bmatmul_docs[] = "matrix matmul op in cublas";
 
 
 static PyObject *initError;
@@ -271,6 +310,10 @@ static PyMethodDef unittest_funcs[] = {
 		(PyCFunction)matmul,
 		METH_VARARGS,
 		gds_matmul_docs},
+	{	"bmatmul",
+		(PyCFunction)b_matmul,
+		METH_VARARGS,
+		gds_bmatmul_docs},
 	{	NULL}
 };
 

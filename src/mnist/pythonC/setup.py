@@ -16,7 +16,7 @@ func_files = [
 
 module1 = Extension('unittests',
                     sources =func_files,
-                    libraries=["gdsunittests", "cudart", "cufile"],
+                    libraries=["gdsunittests", "cudart", "cufile", "cublas"],
               library_dirs = ["./build", os.path.join(CUDA_PATH, "lib64")],
               include_dirs=[numpy.get_include(), "./cuda"])
 

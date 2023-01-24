@@ -34,3 +34,5 @@ void operator_transpose(const GDSStorage *input1, GDSStorage *outputs);
 void operator_mean(const GDSStorage *input1, int dim, GDSStorage *outputs);
 
 void operator_sum(const GDSStorage *input1, int dim, GDSStorage *outputs);
+
+void operator_matmul_raw(const double *input1, const double *input2, double *outputs, int a_row, int a_col, int b_row, int b_col, int broadcast);

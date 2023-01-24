@@ -4,6 +4,7 @@
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
 #include <chrono>
+#include "cublas_func.cuh"
 
 template<typename T>
 void initialize_matrix(T* M, int rows, int cols, std::function<double()> F) {
@@ -124,6 +125,7 @@ extern "C" void perform_matmul(double* A_cpu, double *B_cpu, double *C_host, int
   // int B_rows = A_cols;
   // int C_rows = A_rows;
   // int C_cols = B_cols;
+
   int A_rows = a_row;
   int A_cols = a_col;
   int B_cols = b_col;
@@ -173,27 +175,43 @@ extern "C" void perform_matmul(double* A_cpu, double *B_cpu, double *C_host, int
   };
 
   // initialize_matrix<double>(A_cpu, A_rows, A_cols, rand_numbers);
-	cudaMemcpy(A, A_cpu, A_size * sizeof(double), cudaMemcpyHostToDevice);  
+	cudaMemcpy(A, A_cpu, A_size * sizeof(double), cudaMemcpyHostToDevice); 
+  
+  if(const char* env_p = std::getenv("ALNAIR_DBG")) {
+    // std::cout << "Debug mode: " << env_p << '\n';
+    if (strlen(env_p) > 0)
+        check_copy<double>(A, A_cpu, A_size, "A matrix");
+  } 
 
   // initialize_matrix<double>(B_cpu, B_rows, B_cols, rand_numbers);
 	cudaMemcpy(B, B_cpu, B_size * sizeof(double), cudaMemcpyHostToDevice);
 
-
   // launch kernel
 
-  dim3 dim_grid(C_cols/COL_TILE_WIDTH, C_rows/ROW_TILE_WIDTH, 1);
-  dim3 dim_block(COL_TILE_WIDTH, ROW_TILE_WIDTH, 1);
+  char kernel_name[20];
+  if (flag == 1) {
+    strcpy(kernel_name, "cublas");
 
-  cudaEventRecord(start_gpu);
-  naive_matrix_multiply<double><<<dim_grid, dim_block>>>(A, B, C, A_cols, C_rows, C_cols);
-  cudaEventRecord(stop_gpu);
+    cudaEventRecord(start_gpu);
+    gpu_blas_mmul((const float*) A_cpu, (const float *) B_cpu, (float *)C,  A_cols, C_rows, C_cols);
+    cudaEventRecord(stop_gpu);
+  } else {
+    strcpy(kernel_name, "tiled");
 
-  // Wait for GPU to finish before accessing on host
-  cudaDeviceSynchronize();
-	cudaMemcpy(C_host, C, C_size * sizeof(double), cudaMemcpyDeviceToHost);
+    dim3 dim_grid(C_cols/COL_TILE_WIDTH, C_rows/ROW_TILE_WIDTH, 1);
+    dim3 dim_block(COL_TILE_WIDTH, ROW_TILE_WIDTH, 1);
+
+    naive_matrix_multiply<double><<<dim_grid, dim_block>>>(A, B, C, A_cols, C_rows, C_cols);
+    cudaEventRecord(stop_gpu);
+
+    // Wait for GPU to finish before accessing on host
+    cudaDeviceSynchronize();
+  }
+  cudaMemcpy(C_host, C, C_size * sizeof(double), cudaMemcpyDeviceToHost);
 
   cudaEventSynchronize(stop_gpu);
   cudaEventElapsedTime(&gpu_time_ms, start_gpu, stop_gpu);
+
   
 
   // check results on CPU
@@ -213,7 +231,7 @@ extern "C" void perform_matmul(double* A_cpu, double *B_cpu, double *C_host, int
   }
 
   auto cpu_time_ms = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count()/1000.0f;
-  std::cout << "GPU time = " << gpu_time_ms << "ms" << std::endl;
+  std::cout << kernel_name << " GPU time = " << gpu_time_ms << "ms" << std::endl;
   std::cout << "CPU time = " << cpu_time_ms << "ms" << std::endl;
   std::cout << "Speedup = " << cpu_time_ms/gpu_time_ms << std::endl;
   

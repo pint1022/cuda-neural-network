@@ -173,6 +173,20 @@ void operator_matmul(const GDSStorage *input1, const GDSStorage *input2,
   CUDA_POST_KERNEL_CHECK;
 }
 
+void operator_matmul_raw(const float *input1, const float *input2, float *outputs, int a_row, int a_col, int b_row, int b_col, int broadcast) {
+  int height = a_row;
+  int k = a_col;
+  int width = b_col;
+  // pointer
+
+  dim3 dim_block(TILE_SIZE, TILE_SIZE);
+  dim3 dim_grid(ceil((float)width / TILE_SIZE), ceil((float)height / TILE_SIZE),
+                1);
+  operator_matmul_h<<<dim_grid, dim_block>>>(input1, input2, outputs, height, k, width, broadcast);
+
+  CUDA_POST_KERNEL_CHECK;
+}
+
 __global__ void operator_transpose_h(const float *in, float *out, int height,
                                      int width) {
   __shared__ float tile[TILE_SIZE][TILE_SIZE];

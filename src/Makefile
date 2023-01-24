@@ -20,6 +20,8 @@ CUDA_INCDIRS=-I /usr/local/cuda/include/  -I /usr/local/cuda/targets/x86_64-linu
 CUDA_LIBDIRS=-L /usr/local/cuda/targets/x86_64-linux/lib/ -lcufile -L /usr/local/cuda/lib64/ -lcuda -L   -Bstatic -L /usr/local/cuda/lib64/ 
 LIBS= -lopenblas -lpthread -lcublas -ldl -lcudart_static -lrt -lcufile -lcuda -L   -Bstatic -L /usr/local/cuda/lib64/ -lcudart_static -lrt -lpthread -ldl 
 
+CUDAOBJ = $(BUILDDIR)/cublas_func.o $(BUILDDIR)/gds_add_unit_test.o $(BUILDDIR)/gds_readimg_unit_test.o $(BUILDDIR)/stddev_unit_test.o $(BUILDDIR)/storage_gds.o $(BUILDDIR)/dataset_gds.o $(BUILDDIR)/util_func.o
+
 .PHONY: all build test clean
 
 all: build $(BUILDDIR)/libgdsunittests.a 
@@ -30,7 +32,8 @@ all: build $(BUILDDIR)/libgdsunittests.a
 install:
 	python $(EXTDIR)/setup.py install
 
-$(BUILDDIR)/libgdsunittests.a: $(BUILDDIR)/gds_add_unit_test.o $(BUILDDIR)/gds_readimg_unit_test.o $(BUILDDIR)/stddev_unit_test.o $(BUILDDIR)/storage_gds.o $(BUILDDIR)/dataset_gds.o $(BUILDDIR)/util_func.o
+
+$(BUILDDIR)/libgdsunittests.a:  $(CUDAOBJ)
 	rm -f $(BUILDDIR)/libgdsunittests.a
 	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/gds_add_unit_test.o $(BUILDDIR)/temp_add.o 
 	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/gds_readimg_unit_test.o $(BUILDDIR)/temp_readimg.o 
@@ -38,6 +41,7 @@ $(BUILDDIR)/libgdsunittests.a: $(BUILDDIR)/gds_add_unit_test.o $(BUILDDIR)/gds_r
 	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/storage_gds.o  $(BUILDDIR)/temp_storage.o
 	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/dataset_gds.o $(BUILDDIR)/temp_dataset.o
 	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/util_func.o $(BUILDDIR)/temp_util_func.o 
+	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/cublas_func.o $(BUILDDIR)/temp_cublas_func.o 
 	ranlib $(BUILDDIR)/libgdsunittests.a
 
 $(BUILDDIR)/gds_add_unit_test.o:  $(UNITTESTDIR)/gds_add_unit_test.cu
@@ -63,6 +67,10 @@ $(BUILDDIR)/dataset_gds.o:  $(MNISTDIR)/dataset_gds.cu
 $(BUILDDIR)/util_func.o : $(CUDADIR)/util_func.cu
 	$(NVCC) $(CFLAGS) -rdc=true --compiler-options '-fPIC' $(CUDA_INCDIRS) -c -o $(BUILDDIR)/temp_util_func.o $(CUDADIR)/util_func.cu  $(GENCODE_FLAGS)
 	${NVCC} -dlink --compiler-options '-fPIC' -o $(BUILDDIR)/util_func.o $(BUILDDIR)/temp_util_func.o $(CUDA_LIBDIRS) $(LIBS)  $(GENCODE_FLAGS)
+
+$(BUILDDIR)/cublas_func.o : $(CUDADIR)/cublas_func.cu
+	$(NVCC) $(CFLAGS) -rdc=true --compiler-options '-fPIC' $(CUDA_INCDIRS) -c -o $(BUILDDIR)/temp_cublas_func.o $(CUDADIR)/cublas_func.cu  $(GENCODE_FLAGS)
+	${NVCC} -dlink --compiler-options '-fPIC' -o $(BUILDDIR)/cublas_func.o $(BUILDDIR)/temp_cublas_func.o $(CUDA_LIBDIRS) $(LIBS)  $(GENCODE_FLAGS)
 
 clean:
 	rm -rf *.out *.bin *.exe *.o *.a *.so *.png test build $(BUILDDIR)/*

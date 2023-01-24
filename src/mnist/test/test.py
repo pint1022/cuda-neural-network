@@ -69,6 +69,15 @@ def test_matmul():
     B = np.random.rand(b_row, b_col)
     C = gds.matmul(A,B, a_row, a_col, b_row, b_col)
 
+def test_matmul_blas():
+    a_row = 1 << 9
+    a_col = 1 << 10
+    b_row = a_col
+    b_col = 1 << 11
+    A = np.random.rand(a_row, a_col)
+    B = np.random.rand(b_row, b_col)
+    C = gds.bmatmul(A,B, a_row, a_col, b_row, b_col)
+
 #
 # basice testing
 #
@@ -76,7 +85,8 @@ def test_matmul():
 test_numpy()
 test_abc()
 test_add()
-test_matmul()
+test_matmul_blas()
+# test_matmul()
 
 
 
