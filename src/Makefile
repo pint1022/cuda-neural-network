@@ -30,13 +30,14 @@ all: build $(BUILDDIR)/libgdsunittests.a
 install:
 	python $(EXTDIR)/setup.py install
 
-$(BUILDDIR)/libgdsunittests.a: $(BUILDDIR)/gds_add_unit_test.o $(BUILDDIR)/gds_readimg_unit_test.o $(BUILDDIR)/stddev_unit_test.o $(BUILDDIR)/storage_gds.o $(BUILDDIR)/dataset_gds.o
+$(BUILDDIR)/libgdsunittests.a: $(BUILDDIR)/gds_add_unit_test.o $(BUILDDIR)/gds_readimg_unit_test.o $(BUILDDIR)/stddev_unit_test.o $(BUILDDIR)/storage_gds.o $(BUILDDIR)/dataset_gds.o $(BUILDDIR)/util_func.o
 	rm -f $(BUILDDIR)/libgdsunittests.a
 	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/gds_add_unit_test.o $(BUILDDIR)/temp_add.o 
 	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/gds_readimg_unit_test.o $(BUILDDIR)/temp_readimg.o 
 	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/stddev_unit_test.o  $(BUILDDIR)/temp_dev.o
 	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/storage_gds.o  $(BUILDDIR)/temp_storage.o
 	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/dataset_gds.o $(BUILDDIR)/temp_dataset.o
+	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/util_func.o $(BUILDDIR)/temp_util_func.o 
 	ranlib $(BUILDDIR)/libgdsunittests.a
 
 $(BUILDDIR)/gds_add_unit_test.o:  $(UNITTESTDIR)/gds_add_unit_test.cu

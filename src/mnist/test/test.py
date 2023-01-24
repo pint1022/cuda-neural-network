@@ -59,13 +59,31 @@ def test_abc():
         a = np.random.uniform(low=-5, high=5, size=10000)
         b = gds.adc3(a)
         print(np.stack((a, b), axis=-1))
+
+def test_matmul():
+    a_row = 1 << 9
+    a_col = 1 << 10
+    b_row = a_col
+    b_col = 1 << 11
+    A = np.random.rand(a_row, a_col)
+    B = np.random.rand(b_row, b_col)
+    C = gds.matmul(A,B, a_row, a_col, b_row, b_col)
+
 #
 # basice testing
 #
-test_stddev()
-# test_system()
+#
+test_numpy()
+test_abc()
 test_add()
+test_matmul()
 
+
+
+
+#######################################################
+# test_stddev()
+# test_system()
 #
 # read images
 #
@@ -73,8 +91,4 @@ test_add()
 
 #
 #no return data test
-#
-# test_numpy()
-
-# test_abc()
 # test_mnist_train()

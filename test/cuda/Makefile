@@ -4,7 +4,7 @@ SM := 80
 CFLAGS = -std=c++14 -g -G
 GENCODE_FLAGS = -gencode arch=compute_$(SM),code=sm_$(SM)
 
-CUDAINCLUDE = -I /usr/local/cuda/include/  -I /usr/local/cuda/targets/x86_64-linux/lib/ -I/usr/local/cuda/include  -I ./
+CUDAINCLUDE = -I /usr/local/cuda/include/  -I /usr/local/cuda/targets/x86_64-linux/lib/ -I/usr/local/cuda/include  -I ./ -I./cuda
 CUDALIB = -lcudart -L/usr/local/cuda/lib -L./ -lgdskernel
 #-DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CUDA
 

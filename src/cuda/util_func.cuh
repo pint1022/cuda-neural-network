@@ -5,10 +5,10 @@
 #include <functional>
 
 template<typename T>
-void initialize_matrix(T* M, int rows, int cols, std::function<float()> F);
+void initialize_matrix(T* M, int rows, int cols, std::function<double()> F);
 
 template<typename T>
-void initialize_matrix(T* M, int rows, int cols, std::function<float(int, int)> F);
+void initialize_matrix(T* M, int rows, int cols, std::function<double(int, int)> F);
 
 template<typename T>
 void print_matrix(T* M, int rows, int cols);
@@ -20,6 +20,6 @@ T maxDiff(T* A1, T* A2, int rows, int cols);
 template<typename T>
 void check_copy(T* dM, T* hM, int d_size, char* label);
 
-extern "C" void perform_matmul();
+extern "C" void perform_matmul(double* A, double *B, double *C, int a_row, int a_col, int b_row, int b_col, int flag);
 
 #endif __UTIL_FUNC__
