@@ -11,13 +11,13 @@ else:
 
 func_files = [
       #  'gds_unit_test.cpp', 
-       'bind.cpp'
+       'mnist/pythonC/bind.cpp'
        ]
 
 module1 = Extension('unittests',
                     sources =func_files,
                     libraries=["gdsunittests", "cudart", "cufile"],
-              library_dirs = [".", os.path.join(CUDA_PATH, "lib64")],
+              library_dirs = ["./build", os.path.join(CUDA_PATH, "lib64")],
               include_dirs=[numpy.get_include()])
 
 setup (name = 'PackageName',

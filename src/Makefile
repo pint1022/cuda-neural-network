@@ -1,0 +1,70 @@
+CC=g++
+NVCC=nvcc
+
+SM := 80
+GENCODE_FLAGS = -gencode arch=compute_$(SM),code=sm_$(SM)
+
+
+CUDADIR=./cuda
+MNISTDIR=./mnist
+EXTDIR=./mnist/pythonC
+UNITTESTDIR=./mnist/test
+
+BUILDDIR=./build
+
+# CXXFLAGS= -fopenmp -O3 -Wextra -std=c++11
+CUDAFLAGS= -std=c++14 -c -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CUDA
+# LIBDIRS=-L/usr/local/cuda-7.5/lib64
+
+CUDA_INCDIRS=-I /usr/local/cuda/include/  -I /usr/local/cuda/targets/x86_64-linux/lib/ -I$(CUDADIR) -I$(UNITTESTDIR) -I$(MNISTDIR) -I$(EXTDIR)
+CUDA_LIBDIRS=-L /usr/local/cuda/targets/x86_64-linux/lib/ -lcufile -L /usr/local/cuda/lib64/ -lcuda -L   -Bstatic -L /usr/local/cuda/lib64/ 
+LIBS= -lopenblas -lpthread -lcublas -ldl -lcudart_static -lrt -lcufile -lcuda -L   -Bstatic -L /usr/local/cuda/lib64/ -lcudart_static -lrt -lpthread -ldl 
+
+.PHONY: all build test clean
+
+all: build $(BUILDDIR)/libgdsunittests.a 
+	CC=g++ LDSHARED='$(shell python $(EXTDIR)/configure.py)' python $(EXTDIR)/setup.py build
+	python $(EXTDIR)/setup.py install
+	# python $(UNITTESTDIR)/test.py
+
+install:
+	python $(EXTDIR)/setup.py install
+
+$(BUILDDIR)/libgdsunittests.a: $(BUILDDIR)/gds_add_unit_test.o $(BUILDDIR)/gds_readimg_unit_test.o $(BUILDDIR)/stddev_unit_test.o $(BUILDDIR)/storage_gds.o $(BUILDDIR)/dataset_gds.o
+	rm -f $(BUILDDIR)/libgdsunittests.a
+	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/gds_add_unit_test.o $(BUILDDIR)/temp_add.o 
+	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/gds_readimg_unit_test.o $(BUILDDIR)/temp_readimg.o 
+	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/stddev_unit_test.o  $(BUILDDIR)/temp_dev.o
+	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/storage_gds.o  $(BUILDDIR)/temp_storage.o
+	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/dataset_gds.o $(BUILDDIR)/temp_dataset.o
+	ranlib $(BUILDDIR)/libgdsunittests.a
+
+$(BUILDDIR)/gds_add_unit_test.o:  $(UNITTESTDIR)/gds_add_unit_test.cu
+	$(NVCC) $(CUDAFLAGS) -rdc=true --compiler-options '-fPIC' $(CUDA_INCDIRS) -c -o $(BUILDDIR)/temp_add.o $(UNITTESTDIR)/gds_add_unit_test.cu $(GENCODE_FLAGS)
+	$(NVCC) -dlink --compiler-options '-fPIC' -o $(BUILDDIR)/gds_add_unit_test.o $(BUILDDIR)/temp_add.o $(CUDA_LIBDIRS) $(LIBS) $(GENCODE_FLAGS)
+
+$(BUILDDIR)/gds_readimg_unit_test.o:  $(UNITTESTDIR)/gds_readimg_unit_test.cu
+	$(NVCC) $(CUDAFLAGS) -rdc=true --compiler-options '-fPIC' $(CUDA_INCDIRS) -c -o $(BUILDDIR)/temp_readimg.o $(UNITTESTDIR)/gds_readimg_unit_test.cu $(GENCODE_FLAGS)
+	$(NVCC) -dlink --compiler-options '-fPIC' -o $(BUILDDIR)/gds_readimg_unit_test.o $(BUILDDIR)/temp_readimg.o $(CUDA_LIBDIRS) $(LIBS) $(GENCODE_FLAGS)
+
+$(BUILDDIR)/stddev_unit_test.o:  $(UNITTESTDIR)/stddev_unit_test.cu
+	$(NVCC) $(CUDAFLAGS) -rdc=true --compiler-options '-fPIC' $(CUDA_INCDIRS) -c -o $(BUILDDIR)/temp_dev.o $(UNITTESTDIR)/stddev_unit_test.cu $(GENCODE_FLAGS)
+	$(NVCC) -dlink --compiler-options '-fPIC' -o $(BUILDDIR)/stddev_unit_test.o $(BUILDDIR)/temp_dev.o $(CUDA_LIBDIRS) $(LIBS) $(GENCODE_FLAGS)
+
+$(BUILDDIR)/storage_gds.o:  $(CUDADIR)/storage_gds.cu
+	$(NVCC) $(CUDAFLAGS) -rdc=true --compiler-options '-fPIC' $(CUDA_INCDIRS) -c -o $(BUILDDIR)/temp_storage.o $(CUDADIR)/storage_gds.cu $(GENCODE_FLAGS)
+	$(NVCC) -dlink --compiler-options '-fPIC' -o $(BUILDDIR)/storage_gds.o $(BUILDDIR)/temp_storage.o $(CUDA_LIBDIRS) $(LIBS) $(GENCODE_FLAGS)
+
+$(BUILDDIR)/dataset_gds.o:  $(MNISTDIR)/dataset_gds.cu
+	$(NVCC) $(CUDAFLAGS) -rdc=true --compiler-options '-fPIC' $(CUDA_INCDIRS) -c -o $(BUILDDIR)/temp_dataset.o $(MNISTDIR)/dataset_gds.cu $(GENCODE_FLAGS)
+	$(NVCC) -dlink --compiler-options '-fPIC' -o $(BUILDDIR)/dataset_gds.o $(BUILDDIR)/temp_dataset.o $(CUDA_LIBDIRS) $(LIBS) $(GENCODE_FLAGS)
+
+$(BUILDDIR)/util_func.o : $(CUDADIR)/util_func.cu
+	$(NVCC) $(CFLAGS) -rdc=true --compiler-options '-fPIC' $(CUDA_INCDIRS) -c -o $(BUILDDIR)/temp_util_func.o $(CUDADIR)/util_func.cu  $(GENCODE_FLAGS)
+	${NVCC} -dlink --compiler-options '-fPIC' -o $(BUILDDIR)/util_func.o $(BUILDDIR)/temp_util_func.o $(CUDA_LIBDIRS) $(LIBS)  $(GENCODE_FLAGS)
+
+clean:
+	rm -rf *.out *.bin *.exe *.o *.a *.so *.png test build $(BUILDDIR)/*
+
+sanity:
+	python $(UNITTESTDIR)/test.py
