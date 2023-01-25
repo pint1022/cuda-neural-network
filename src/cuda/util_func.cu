@@ -176,8 +176,8 @@ extern "C" void perform_matmul(double* A_cpu, double *B_cpu, double *C_host, int
 
   // initialize_matrix<double>(A_cpu, A_rows, A_cols, rand_numbers);
 	cudaMemcpy(A, A_cpu, A_size * sizeof(double), cudaMemcpyHostToDevice); 
-  
-  if(const char* env_p = std::getenv("ALNAIR_DBG")) {
+  const char* env_p;
+  if(env_p = std::getenv("ALNAIR_DBG")) {
     // std::cout << "Debug mode: " << env_p << '\n';
     if (strlen(env_p) > 0)
         check_copy<double>(A, A_cpu, A_size, "A matrix");
@@ -218,6 +218,11 @@ extern "C" void perform_matmul(double* A_cpu, double *B_cpu, double *C_host, int
   auto t1 = std::chrono::system_clock::now();
   naive_matrix_multiply_cpu<double>(A_cpu, B_cpu, C_cpu, A_cols, C_rows, C_cols);
   auto t2 = std::chrono::system_clock::now();
+  if(env_p) {
+    // std::cout << "Debug mode: " << env_p << '\n';
+    if (strlen(env_p) > 0)
+        check_copy<double>(C, C_cpu, C_size, "C matrix");
+  } 
 
   if(fabsf(maxDiff<double>(C_host, C_cpu, C_rows, C_cols)) <= (double)EPSILON )
      std::cout << "PASS" << std::endl;
