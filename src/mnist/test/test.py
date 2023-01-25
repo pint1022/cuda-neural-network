@@ -29,6 +29,7 @@ def data_gen(rg):
     return np.array([np.transpose(np_time), np.transpose(c_time)])
 
 def test_stddev():
+    print("\n\nstandard deviance test")
     lens = range(1000, 20000, 1000)
     data = data_gen(rg=lens)
 
@@ -43,19 +44,22 @@ def test_stddev():
     plt.show()
 
 def test_system():
+    print("\n\nsyste command test")
     gds.system("ls -l")
 
 def test_add():
-    print("test add function")
+    print("\n\ntest add function")
     print(gds.add(5, 6, 'testfile'))
 
 def test_readimg():
+    print("\n\nread image")
     batch_size = 256
     mnist_data = get_dataset()
 
     data = gds.gds_read_image_data(mnist_data, batch_size)
 
 def test_numpy():
+    print("\n\nread numpy format image")
     batch_size = 256
     mnist_data = get_dataset()
     row, col, data = gds.gds_read_numpy(mnist_data, batch_size)
@@ -63,12 +67,14 @@ def test_numpy():
     print(data)
 
 def test_abc():
+    print("\n\nabc test")
     for i in range(2):
         a = np.random.uniform(low=-5, high=5, size=10000)
         b = gds.adc3(a)
         print(np.stack((a, b), axis=-1))
 
 def test_matmul():
+    print("\n\ntiled matmul test")
     a_row = 1 << 9
     a_col = 1 << 10
     b_row = a_col
@@ -78,6 +84,7 @@ def test_matmul():
     C = gds.matmul(A,B, a_row, a_col, b_row, b_col)
 
 def test_matmul_blas():
+    print("\n\ncublas matmul test")
     a_row = 1 << 9
     a_col = 1 << 10
     b_row = a_col
@@ -93,8 +100,8 @@ def test_matmul_blas():
 test_numpy()
 test_abc()
 test_add()
-test_matmul_blas()
-# test_matmul()
+# test_matmul_blas()
+test_matmul()
 
 
 
