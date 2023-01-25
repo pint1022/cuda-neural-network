@@ -1,10 +1,18 @@
 #!/usr/bin/env python3
+import os
 import numpy as np
 import random
 import timeit
 import pandas as pd
 from matplotlib import pyplot as plt
 import unittests as gds
+
+def get_dataset():
+    datasetDir = os.getenv('ALNAIR_DATASET')
+    if not (datasetDir and not datasetDir.isspace()):
+        datasetDir = "/home/steven/dev/DataLoaders_DALI/cuda-neural-network/build/mnist_data/train-images-idx3-ubyte"
+    return datasetDir
+
 
 def data_gen(rg):
     lp_time = []
@@ -43,13 +51,13 @@ def test_add():
 
 def test_readimg():
     batch_size = 256
-    mnist_data = "/home/steven/dev/DataLoaders_DALI/cuda-neural-network/build/mnist_data/train-images-idx3-ubyte"
+    mnist_data = get_dataset()
+
     data = gds.gds_read_image_data(mnist_data, batch_size)
-    # print(data)
 
 def test_numpy():
     batch_size = 256
-    mnist_data = "/home/steven/dev/DataLoaders_DALI/cuda-neural-network/build/mnist_data/train-images-idx3-ubyte"
+    mnist_data = get_dataset()
     row, col, data = gds.gds_read_numpy(mnist_data, batch_size)
     print("row: ", row, ", col: ", col)
     print(data)
