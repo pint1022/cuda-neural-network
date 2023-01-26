@@ -17,7 +17,7 @@ CUDAFLAGS= -std=c++14 -c -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CUDA
 # LIBDIRS=-L/usr/local/cuda-7.5/lib64
 
 CUDA_INCDIRS=-I /usr/local/cuda/include/  -I /usr/local/cuda/targets/x86_64-linux/lib/ -I$(CUDADIR) -I$(UNITTESTDIR) -I$(MNISTDIR) -I$(EXTDIR)
-CUDA_LIBDIRS=-L /usr/local/cuda/targets/x86_64-linux/lib/ -lcufile -L /usr/local/cuda/lib64/ -lcuda -L   -Bstatic -L /usr/local/cuda/lib64/ 
+CUDA_LIBDIRS=-L /usr/local/cuda/targets/x86_64-linux/lib/ -L /usr/local/cuda/lib64/ -lcufile -L /usr/local/cuda/lib64/ -lcuda -L   -Bstatic  
 LIBS= -lopenblas -lpthread -lcublas -ldl -lcudart_static -lrt -lcufile -lcuda -L   -Bstatic -L /usr/local/cuda/lib64/ -lcudart_static -lrt -lpthread -ldl 
 
 CUDAOBJ = $(BUILDDIR)/cublas_func.o $(BUILDDIR)/gds_add_unit_test.o $(BUILDDIR)/gds_readimg_unit_test.o $(BUILDDIR)/stddev_unit_test.o $(BUILDDIR)/storage_gds.o $(BUILDDIR)/dataset_gds.o $(BUILDDIR)/util_func.o

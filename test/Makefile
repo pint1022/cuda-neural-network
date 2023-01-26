@@ -44,4 +44,4 @@ $(BUILDDIR)/main.o: $(SRCDIR)/tiled_matmul.cu
 	$(NVCC) $(CFLAGS) -c  $(SRCDIR)/tiled_matmul.cu -o $(BUILDDIR)/main.o
 
 clean :
-	rm -f $(BUILDDIR)/naive_matrix_multiply $(BUILDDIR)/tiled_matrix_multiply $(BUILDDIR)/*.o $(BUILDDIR)/*.a
+	rm -f $(BUILDDIR)/naive_matrix_multiply $(BUILDDIR)/tiled_matrix_multiply $(BUILDDIR)/*
