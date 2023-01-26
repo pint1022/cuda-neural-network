@@ -4,7 +4,7 @@
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
 #include <chrono>
-#include "util_func.cuh"
+#include "../../src/cuda/util_func.cuh"
 
 template<typename T>
 void naive_matrix_multiply_cpu(T *A, T *B, T* C, int width, int C_rows, int C_cols){
@@ -21,7 +21,25 @@ void naive_matrix_multiply_cpu(T *A, T *B, T* C, int width, int C_rows, int C_co
     }
 }
 
+#define EPSILON         (1e-5)
 
+template<typename T>
+void initialize_matrix(T* M, int rows, int cols, std::function<double()> F) {
+  for(int i = 0; i < rows; i++){
+    for(int j = 0; j < cols; j++){
+      M[i * cols + j] = F();
+    }
+  }
+}
+
+template<typename T>
+void initialize_matrix(T* M, int rows, int cols, std::function<double(int, int)> F) {
+  for(int i = 0; i < rows; i++){
+    for(int j = 0; j < cols; j++){
+      M[i * cols + j] = F(i, j);
+    }
+  }
+}
 int main(void)
 {
   int A_rows = 1 << 8;
@@ -34,8 +52,8 @@ int main(void)
   int A_size = A_rows * A_cols;
   int B_size = B_rows * B_cols;
   int C_size = C_rows * C_cols;
-  float *A, *B, *C, *C_host;
-  float *A_cpu, *B_cpu, *C_cpu;
+  double *A, *B, *C, *C_host;
+  double *A_cpu, *B_cpu, *C_cpu;
   // timing
   cudaEvent_t start_gpu, stop_gpu;
   float gpu_time_ms = 0;
@@ -45,50 +63,46 @@ int main(void)
   std::cout << "A size: " << A_size << ", B size: " << B_size << ", C Size: " << C_size << std::endl;  
   std::cout << "A: " << A_rows << "x" << A_cols << ", B: " << B_rows << "x" << B_cols <<  ", C: " << C_rows << "x" << C_cols << std::endl;  
   // Allocate Unified Memory – accessible from CPU or GPU
-  cudaMalloc(&A, A_size*sizeof(float));
+  cudaMalloc(&A, A_size*sizeof(double));
 
-  cudaMalloc(&B, B_size*sizeof(float));
-  cudaMalloc(&C, C_size*sizeof(float));
-  C_host = (float*) malloc(C_size*sizeof(float));
+  cudaMalloc(&B, B_size*sizeof(double));
+  cudaMalloc(&C, C_size*sizeof(double));
+  C_host = (double*) malloc(C_size*sizeof(double));
 
 
-  A_cpu = (float*) malloc(A_size*sizeof(float));
-  B_cpu = (float*) malloc(B_size*sizeof(float));
-  C_cpu = (float*) malloc(C_size*sizeof(float));
+  A_cpu = (double*) malloc(A_size*sizeof(double));
+  B_cpu = (double*) malloc(B_size*sizeof(double));
+  C_cpu = (double*) malloc(C_size*sizeof(double));
 
   // initialize A and B matrices
-  auto all_ones = []() -> float {
+  auto all_ones = []() -> double {
     return 1.0f;
   };
 
   srand (time(NULL));
-  auto rand_numbers = []() -> float {
-    return static_cast<float>(rand())/(static_cast<float>(RAND_MAX/1000));
+  auto rand_numbers = []() -> double {
+    return static_cast<double>(rand())/(static_cast<double>(RAND_MAX/1000));
   };
 
-  auto index_based = [](int i, int j) -> float {
+  auto index_based = [](int i, int j) -> double {
     return j;
   };
 
-  initialize_matrix<float>(A_cpu, A_rows, A_cols, rand_numbers);
-	cudaMemcpy(A, A_cpu, A_size * sizeof(float), cudaMemcpyHostToDevice);  
+  initialize_matrix<double>(A_cpu, A_rows, A_cols, rand_numbers);
+	cudaMemcpy(A, A_cpu, A_size * sizeof(double), cudaMemcpyHostToDevice);  
 
-  initialize_matrix<float>(B_cpu, B_rows, B_cols, rand_numbers);
-	cudaMemcpy(B, B_cpu, B_size * sizeof(float), cudaMemcpyHostToDevice);
+  initialize_matrix<double>(B_cpu, B_rows, B_cols, rand_numbers);
+	cudaMemcpy(B, B_cpu, B_size * sizeof(double), cudaMemcpyHostToDevice);
 
 
   // launch kernel
 
-  dim3 dim_grid(C_cols/COL_TILE_WIDTH, C_rows/ROW_TILE_WIDTH, 1);
-  dim3 dim_block(COL_TILE_WIDTH, ROW_TILE_WIDTH, 1);
-
   cudaEventRecord(start_gpu);
-  naive_matrix_multiply<float><<<dim_grid, dim_block>>>(A, B, C, A_cols, C_rows, C_cols);
+  perform_matmul(A, B, C, A_rows, A_cols, B_rows, B_cols, 0);
   cudaEventRecord(stop_gpu);
 
   // Wait for GPU to finish before accessing on host
-  cudaDeviceSynchronize();
-	cudaMemcpy(C_host, C, C_size * sizeof(float), cudaMemcpyDeviceToHost);
+	cudaMemcpy(C_host, C, C_size * sizeof(double), cudaMemcpyDeviceToHost);
 
   cudaEventSynchronize(stop_gpu);
   cudaEventElapsedTime(&gpu_time_ms, start_gpu, stop_gpu);
@@ -96,17 +110,17 @@ int main(void)
 
   // check results on CPU
   auto t1 = std::chrono::system_clock::now();
-  naive_matrix_multiply_cpu<float>(A_cpu, B_cpu, C_cpu, A_cols, C_rows, C_cols);
+  naive_matrix_multiply_cpu<double>(A_cpu, B_cpu, C_cpu, A_cols, C_rows, C_cols);
   auto t2 = std::chrono::system_clock::now();
 
-  if(fabsf(maxDiff<float>(C_host, C_cpu, C_rows, C_cols)) <= (float)EPSILON )
+  if(fabsf(maxDiff<double>(C_host, C_cpu, C_rows, C_cols)) <= (double)EPSILON )
      std::cout << "PASS" << std::endl;
   else {
      std::cout << "FAIL" << std::endl;
      std::cout << "GPU result [0:9, 0:9]" << std::endl;
-     print_matrix<float>( C_host, 10, 10);
+     print_matrix<double>( C_host, 10, 10);
      std::cout << "CPU result [0:9, 0:9]" << std::endl;
-     print_matrix<float>( C_cpu, 10, 10);
+     print_matrix<double>( C_cpu, 10, 10);
 
   }
 
