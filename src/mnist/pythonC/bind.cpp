@@ -222,6 +222,7 @@ matmul(PyObject *self, PyObject *args) {
 
   CArray = (PyArrayObject *)
                PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, pC);
+  free(pC);
 //   PyArray_ENABLEFLAGS(CArray, NPY_ARRAY_OWNDATA);    
   //Py_INCREF(outArray);
   return PyArray_Return(CArray); 
@@ -259,10 +260,13 @@ b_matmul(PyObject *self, PyObject *args) {
 
   CArray = (PyArrayObject *)
                PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, pC);
+  free(pC);
 //   PyArray_ENABLEFLAGS(CArray, NPY_ARRAY_OWNDATA);    
   //Py_INCREF(outArray);
   return PyArray_Return(CArray); 
 } 
+
+
 
 char system_docs[] = "call shell command by 'system'.  import gds_unittest as gds gds.system(\'ls -l\') ";
 char addfunc_docs[] = "Add two numbers function.";
@@ -273,6 +277,8 @@ char gds_read_narray_docs[] = "n-bit Analog-to-Digital Converter (ADC)";
 
 char gds_matmul_docs[] = "matrix matmul op";
 char gds_bmatmul_docs[] = "matrix matmul op in cublas";
+char time_bmatmul_docs[] = "timing the matrix matmul op in cublas";
+char time_matmul_docs[] = "timing the matrix matmul op";
 
 
 static PyObject *initError;

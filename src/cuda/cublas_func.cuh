@@ -1,1 +1,1 @@
-void gpu_blas_mmul(const float *A, const float *B, float *C, const int m, const int k, const int n);
+cublasStatus_t gpu_blas_mmul(const cublasHandle_t * handle, const float *A, const float *B, float *C, const int m, const int k, const int n);

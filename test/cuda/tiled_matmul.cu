@@ -4,6 +4,10 @@
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
 #include <chrono>
+#include <string>
+#include <vector>
+
+
 #include "../../src/cuda/util_func.cuh"
 
 template<typename T>
@@ -40,11 +44,91 @@ void initialize_matrix(T* M, int rows, int cols, std::function<double(int, int)>
     }
   }
 }
-int main(void)
+
+template<typename T>
+T maxDiff(T* A1, T* A2, int rows, int cols){
+  T maxDiff = A1[0] - A2[0];
+  for(int i = 0; i < rows; i++) {
+    for(int j = 0; j < cols; j++){
+      T diff = abs(A1[i * cols + j] - A2[i * cols + j]);
+      if( diff > maxDiff) {
+          maxDiff = diff;
+      }
+    }
+  }
+
+  
+  return maxDiff;
+}
+
+static void show_usage(std::string name)
 {
-  int A_rows = 1 << 8;
-  int A_cols = 1 << 10;
-  int B_cols = 1 << 11;
+    std::cerr << "Usage: " << name << " <option(s)> SOURCES"
+              << "Options:\n"
+              << "\t-h,--help\t\tShow this help message\n"
+              << "\t-l,--lib library\tSpecify cublas or custom lib"
+              << std::endl;
+}
+
+int main(int argc, char * argv[])
+{
+  if (argc < 2) {
+      show_usage(argv[0]);
+      return 1;
+  }
+  std::vector <std::string> sources;
+  std::string lib;
+  int m = 10, n = 10, k = 10;
+
+  for (int i = 1; i < argc; ++i) {
+      std::string arg = argv[i];
+      if ((arg == "-h") || (arg == "--help")) {
+          show_usage(argv[0]);
+          return 0;
+      } else if ((arg == "-l") || (arg == "--lib")) {
+          if (i + 1 < argc) { // Make sure we aren't at the end of argv!
+              lib = argv[++i]; // Increment 'i' so we don't get the argument as the next argv[i].
+              std::cout << "kernel lib: "<< lib << std::endl;
+
+          } else { // Uh-oh, there was no argument to the destination option.
+                std::cerr << "--library option requires one argument." << std::endl;
+              return 1;
+          }  
+      } else if (arg == "-m") {
+          if (i + 1 < argc) { // Make sure we aren't at the end of argv!
+              m = atoi(argv[++i]); // Increment 'i' so we don't get the argument as the next argv[i].
+              std::cout << "m: "<< m << std::endl;
+
+          } else { // Uh-oh, there was no argument to the destination option.
+                std::cerr << "-m option requires one argument." << std::endl;
+              return 1;
+          }  
+      } else if (arg == "-n")  {
+          if (i + 1 < argc) { // Make sure we aren't at the end of argv!
+              n = atoi(argv[++i]); // Increment 'i' so we don't get the argument as the next argv[i].
+              std::cout << "n: "<< n << std::endl;
+
+          } else { // Uh-oh, there was no argument to the destination option.
+                std::cerr << "-n option requires one argument." << std::endl;
+              return 1;
+          }  
+      } else if (arg == "-k") {
+          if (i + 1 < argc) { // Make sure we aren't at the end of argv!
+              k = atoi(argv[++i]); // Increment 'i' so we don't get the argument as the next argv[i].
+              std::cout << "k: "<< k << std::endl;
+
+          } else { // Uh-oh, there was no argument to the destination option.
+                std::cerr << "-k option requires one argument." << std::endl;
+              return 1;
+          }  
+      } else {
+          sources.push_back(argv[i]);
+      }
+  }
+
+  int A_rows = 1 << m;
+  int A_cols = 1 << k;
+  int B_cols = 1 << n;
 
   int B_rows = A_cols;
   int C_rows = A_rows;
@@ -57,8 +141,7 @@ int main(void)
   
   // Allocate Unified Memory – accessible from CPU or GPU
   C_host = (double*) malloc(C_size*sizeof(double));
-
-
+  C_cpu = (double*) malloc(C_size*sizeof(double));
   A_cpu = (double*) malloc(A_size*sizeof(double));
   B_cpu = (double*) malloc(B_size*sizeof(double));
 
@@ -82,22 +165,39 @@ int main(void)
 
   // launch kernel
 
-  perform_matmul(A_cpu, B_cpu, C_host, A_rows, A_cols, B_rows, B_cols, 0);
-  
+  double gpu_time_ms;
+  if (lib == "cublas")
+        gpu_time_ms = time_matmul(A_cpu, B_cpu, C_host, A_rows, A_cols, B_rows, B_cols, 1);
+  else
+        gpu_time_ms = time_matmul(A_cpu, B_cpu, C_host, A_rows, A_cols, B_rows, B_cols, 0);
 
-  // if(fabsf(maxDiff<double>(C_host, C_cpu, C_rows, C_cols)) <= (double)EPSILON )
-  //    std::cout << "PASS" << std::endl;
-  // else {
-  //    std::cout << "FAIL" << std::endl;
-  //    std::cout << "GPU result [0:9, 0:9]" << std::endl;
-  //    print_matrix<double>( C_host, 10, 10);
-  //    std::cout << "CPU result [0:9, 0:9]" << std::endl;
-  //    print_matrix<double>( C_cpu, 10, 10);
-  // }
-  
-  // Free memory
+
+  auto t1 = std::chrono::system_clock::now();
+  naive_matrix_multiply_cpu<double>(A_cpu, B_cpu, C_cpu, A_cols, C_rows, C_cols);
+  auto t2 = std::chrono::system_clock::now();
+
+
+
+  if(fabsf(maxDiff<double>(C_host, C_cpu, C_rows, C_cols)) <= (double)EPSILON )
+     std::cout << "PASS" << std::endl;
+  else {
+     std::cout << "FAIL" << std::endl;
+     std::cout << "GPU result [0:9, 0:9]" << std::endl;
+     print_matrix<double>( C_host, 10, 10);
+     std::cout << "CPU result [0:9, 0:9]" << std::endl;
+     print_matrix<double>( C_cpu, 10, 10);
+
+  }
+
+
+  auto cpu_time_ms = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count()/1000.0f;
+  std::cout << lib << " GPU time = " << gpu_time_ms << "ms" << std::endl;
+  std::cout << "CPU time = " << cpu_time_ms << "ms" << std::endl;
+  std::cout << "Speedup = " << cpu_time_ms/gpu_time_ms << std::endl;
+
 
   free(C_host);
+  free(C_cpu);
 
   free(A_cpu);
   free(B_cpu);
