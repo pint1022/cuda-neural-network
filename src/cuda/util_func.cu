@@ -26,7 +26,7 @@ const char* cublasGetErrorString(cublasStatus_t status)
 }
 
 template<typename T>
-void initialize_matrix(T* M, int rows, int cols, std::function<float()> F) {
+void initialize_matrix(T* M, int rows, int cols, std::function<T()> F) {
   for(int i = 0; i < rows; i++){
     for(int j = 0; j < cols; j++){
       M[i * cols + j] = F();
@@ -35,7 +35,7 @@ void initialize_matrix(T* M, int rows, int cols, std::function<float()> F) {
 }
 
 template<typename T>
-void initialize_matrix(T* M, int rows, int cols, std::function<float(int, int)> F) {
+void initialize_matrix(T* M, int rows, int cols, std::function<T(int, int)> F) {
   for(int i = 0; i < rows; i++){
     for(int j = 0; j < cols; j++){
       M[i * cols + j] = F(i, j);
@@ -169,6 +169,19 @@ extern "C" float time_matmul(float* A_cpu, float *B_cpu, float *C_host, int a_ro
   int C_size = C_rows * C_cols;
   float *A, *B, *C;
 
+  int mat_size;
+  // if (A_rows > A_cols) {
+  //     mat_size = A_rows;
+  //     if (A_cols > B_cols) {
+  //       mat_size *= A_cols;
+  //     } else {
+  //       mat_size *= B_cols;
+  //     }
+  // } else if (A_rows > B_cols) {
+  //     mat_size = A_cols * A_rows;
+  // } else {
+  //     mat_size = B_cols * A_cols;
+  // }
   // timing
   cudaEvent_t start_gpu, stop_gpu;
   float gpu_time_ms = 0;
@@ -205,7 +218,7 @@ extern "C" float time_matmul(float* A_cpu, float *B_cpu, float *C_host, int a_ro
     // strcpy(kernel_name, "cublas");
 
     cudaEventRecord(start_gpu);
-    stat = gpu_blas_mmul(&handle, (const float*) A, (const float *) B, (float *)C,  A_cols, C_rows, C_cols);
+    stat = gpu_blas_mmul(&handle, (const float*) A, (const float *) B, (float *)C,  A_rows, A_cols, A_rows);
     cudaEventRecord(stop_gpu);
 
     if(stat != CUBLAS_STATUS_SUCCESS){

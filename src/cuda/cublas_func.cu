@@ -1,5 +1,7 @@
 
 #include <cublas_v2.h>
+#include <cuda_runtime.h>
+
 // Multiply the arrays A and B on GPU and save the result in C
 // C(m,n) = A(m,k) * B(k,n)
 cublasStatus_t  gpu_blas_mmul(const cublasHandle_t * handle, const float *A, const float *B, float *C, const int m, const int k, const int n) {
