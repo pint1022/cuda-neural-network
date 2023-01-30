@@ -217,7 +217,7 @@ extern "C" float time_matmul(double* A_cpu, double *B_cpu, double *C_host, int a
     cudaEventRecord(stop_gpu);
 
     if(stat != CUBLAS_STATUS_SUCCESS){
-        std::cerr << "cublasSgemmBatched failed" << std::endl;
+        std::cerr << "cublasDgemmBatched failed" << std::endl;
         exit(1);
     }
     assert(!cudaGetLastError());
