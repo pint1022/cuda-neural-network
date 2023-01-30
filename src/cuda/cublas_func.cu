@@ -1,6 +1,6 @@
 
 #include <cublas_v2.h>
-#include <cuda_runtime.h>
+// #include <cuda_runtime.h>
 
 // Multiply the arrays A and B on GPU and save the result in C
 // C(m,n) = A(m,k) * B(k,n)

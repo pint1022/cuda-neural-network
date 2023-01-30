@@ -20,7 +20,8 @@ CUDA_INCDIRS=-I /usr/local/cuda/include/  -I /usr/local/cuda/targets/x86_64-linu
 CUDA_LIBDIRS=-L /usr/local/cuda/targets/x86_64-linux/lib/ -L /usr/local/cuda/lib64/ -lcufile -L /usr/local/cuda/lib64/ -lcuda -L   -Bstatic  
 LIBS=  -lpthread -lcublas -ldl -lcudart_static -lrt -lcufile -lcuda -L   -Bstatic -L /usr/local/cuda/lib64/ -lcudart_static -lrt -lpthread -ldl 
 
-CUDAOBJ = $(BUILDDIR)/cublas_func.o $(BUILDDIR)/gds_add_unit_test.o $(BUILDDIR)/gds_readimg_unit_test.o $(BUILDDIR)/stddev_unit_test.o $(BUILDDIR)/storage_gds.o $(BUILDDIR)/dataset_gds.o $(BUILDDIR)/util_func.o
+CUDAOBJ = $(BUILDDIR)/cublas_func.o $(BUILDDIR)/gds_add_unit_test.o $(BUILDDIR)/gds_readimg_unit_test.o $(BUILDDIR)/stddev_unit_test.o \
+          $(BUILDDIR)/storage_gds.o $(BUILDDIR)/dataset_gds.o $(BUILDDIR)/util_func.o $(BUILDDIR)/vectorAdd.o
 
 .PHONY: all build test clean
 
@@ -42,6 +43,7 @@ $(BUILDDIR)/libgdsunittests.a:  $(CUDAOBJ)
 	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/dataset_gds.o $(BUILDDIR)/temp_dataset.o
 	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/util_func.o $(BUILDDIR)/temp_util_func.o 
 	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/cublas_func.o $(BUILDDIR)/temp_cublas_func.o 
+	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/vectorAdd.o $(BUILDDIR)/temp_vectorAdd.o 
 	ranlib $(BUILDDIR)/libgdsunittests.a
 
 $(BUILDDIR)/gds_add_unit_test.o:  $(UNITTESTDIR)/gds_add_unit_test.cu
@@ -72,8 +74,12 @@ $(BUILDDIR)/cublas_func.o : $(CUDADIR)/cublas_func.cu
 	$(NVCC) $(CFLAGS) -rdc=true --compiler-options '-fPIC' $(CUDA_INCDIRS) -c -o $(BUILDDIR)/temp_cublas_func.o $(CUDADIR)/cublas_func.cu  $(GENCODE_FLAGS)
 	${NVCC} -dlink --compiler-options '-fPIC' -o $(BUILDDIR)/cublas_func.o $(BUILDDIR)/temp_cublas_func.o $(CUDA_LIBDIRS) $(LIBS)  $(GENCODE_FLAGS)
 
+$(BUILDDIR)/vectorAdd.o : $(CUDADIR)/vectorAdd.cu
+	$(NVCC) $(CFLAGS) -rdc=true --compiler-options '-fPIC' $(CUDA_INCDIRS) -c -o $(BUILDDIR)/temp_vectorAdd.o $(CUDADIR)/vectorAdd.cu  $(GENCODE_FLAGS)
+	${NVCC} -dlink --compiler-options '-fPIC' -o $(BUILDDIR)/vectorAdd.o $(BUILDDIR)/temp_vectorAdd.o $(CUDA_LIBDIRS) $(LIBS)  $(GENCODE_FLAGS)
+
 clean:
-	rm -rf *.out *.bin *.exe *.o *.a *.so *.png test build $(BUILDDIR)/*
+	rm -rf *.out *.bin *.exe *.o *.a *.so *.png $(BUILDDIR)/*
 
 sanity:
 	python $(UNITTESTDIR)/test.py
