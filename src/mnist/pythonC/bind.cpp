@@ -104,7 +104,7 @@ test_read_image_data(PyObject* self, PyObject* args) {
         dims[2] = col;
     }
     outArray = (PyArrayObject *)PyArray_SimpleNewFromData(1, dims, NPY_INT, output);
-    PyArray_ENABLEFLAGS(outArray, NPY_ARRAY_OWNDATA);    
+    // PyArray_ENABLEFLAGS(outArray, NPY_ARRAY_OWNDATA);    
     // outArray->flags |= NPY_ARRAY_OWNDATA;
     return PyArray_Return(outArray); 
 
@@ -185,7 +185,7 @@ adc3(PyObject *self, PyObject *args) {
 
   outArray = (PyArrayObject *)
                PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, pout);
-  PyArray_ENABLEFLAGS(outArray, NPY_ARRAY_OWNDATA);    
+  // PyArray_ENABLEFLAGS(outArray, NPY_ARRAY_OWNDATA);    
   //Py_INCREF(outArray);
   return PyArray_Return(outArray); 
 } 
@@ -193,7 +193,7 @@ adc3(PyObject *self, PyObject *args) {
 static PyObject *
 matmul(PyObject *self, PyObject *args) {
   PyArrayObject *AArray = NULL,  *BArray = NULL, *CArray = NULL;
-  float *pA = NULL, *pB = NULL, *pC = NULL;
+  double *pA = NULL, *pB = NULL, *pC = NULL;
   npy_intp nelem;
   npy_intp dims[2];
   int i, j;
@@ -205,9 +205,9 @@ matmul(PyObject *self, PyObject *args) {
 
   nelem = PyArray_DIM(AArray,0); /* size of the input array */
   int c_size = A_row * B_col;
-  pC = (float *) malloc(c_size*sizeof(float));
-  pA = (float *) PyArray_DATA(AArray);
-  pB = (float *) PyArray_DATA(BArray);
+  pC = (double *) malloc(c_size*sizeof(double));
+  pA = (double *) PyArray_DATA(AArray);
+  pB = (double *) PyArray_DATA(BArray);
 
   std::cout << "A:" << A_row << "x" << A_col << ", C size: " << c_size << std::endl;
 
@@ -218,16 +218,13 @@ matmul(PyObject *self, PyObject *args) {
 //
   float gpu_time_ms;
 
-  gpu_time_ms = time_matmul(pA, pB, pC, A_row, A_col, B_row, B_col, 0);
+  // gpu_time_ms = 
+  perform_matmul(pA, pB, pC, A_row, A_col, B_row, B_col, 0);
   dims[0] = A_row;
   dims[1] = B_col;
 
   CArray = (PyArrayObject *)
-               PyArray_SimpleNewFromData(2, dims, NPY_FLOAT32, pC);
-  // std::cout << sizeof(NPY_FLOAT32) << "," << sizeof(NPY_DOUBLE) << std::endl;
-  free(pC);
-//   PyArray_ENABLEFLAGS(CArray, NPY_ARRAY_OWNDATA);    
-  //Py_INCREF(outArray);
+               PyArray_SimpleNewFromData(2, dims, NPY_DOUBLE, pC);
   return PyArray_Return(CArray); 
 } 
 
@@ -236,7 +233,7 @@ b_matmul(PyObject *self, PyObject *args) {
   PyArrayObject *AArray = NULL,  *BArray = NULL, *CArray = NULL;
   double *pA = NULL, *pB = NULL, *pC = NULL;
   npy_intp nelem;
-  npy_intp dims[1];
+  npy_intp dims[2];
   int i, j;
   int A_row, A_col, B_row, B_col;
 
@@ -260,15 +257,15 @@ b_matmul(PyObject *self, PyObject *args) {
 //
   float gpu_time_ms;
 
-  perform_matmul(pA, pB, pC, A_row, A_col, B_row, B_col, 0);
-  std::cout << "tiled A:" << A_row << "x" << A_col << ", C size: " << c_size << std::endl;
+  perform_matmul(pA, pB, pC, A_row, A_col, B_row, B_col, 1);
+  std::cout << "cuBlas A:" << A_row << "x" << A_col << ", C size: " << c_size << std::endl;
 
-  dims[0] = A_row * B_col;
-  // dims[1] = B_col;
+  dims[0] = A_row;
+  dims[1] = B_col;
 
   CArray = (PyArrayObject *)
-               PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, pC);
-  free(pC);
+               PyArray_SimpleNewFromData(2, dims, NPY_DOUBLE, pC);
+  // free(pC);
 //   PyArray_ENABLEFLAGS(CArray, NPY_ARRAY_OWNDATA);    
   //Py_INCREF(outArray);
   return PyArray_Return(CArray); 
