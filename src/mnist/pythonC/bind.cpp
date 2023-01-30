@@ -260,8 +260,8 @@ b_matmul(PyObject *self, PyObject *args) {
 //
   float gpu_time_ms;
 
-  perform_matmul(pA, pB, pC, A_row, A_col, B_row, B_col, 1);
-  std::cout << "cublas A:" << A_row << "x" << A_col << ", C size: " << c_size << std::endl;
+  perform_matmul(pA, pB, pC, A_row, A_col, B_row, B_col, 0);
+  std::cout << "tiled A:" << A_row << "x" << A_col << ", C size: " << c_size << std::endl;
 
   dims[0] = A_row * B_col;
   // dims[1] = B_col;

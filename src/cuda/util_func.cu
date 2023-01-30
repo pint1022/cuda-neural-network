@@ -156,7 +156,7 @@ cublasStatus_t checkCublas(cublasStatus_t result)
   return result;
 }
 
-extern "C" float time_matmul(float* A_cpu, float *B_cpu, float *C_host, int a_row, int a_col, int b_row, int b_col, int flag) {
+extern "C" float time_matmul(double* A_cpu, double *B_cpu, double *C_host, int a_row, int a_col, int b_row, int b_col, int flag) {
   int A_rows = a_row;
   int A_cols = a_col;
   int B_cols = b_col;
@@ -168,7 +168,7 @@ extern "C" float time_matmul(float* A_cpu, float *B_cpu, float *C_host, int a_ro
   int A_size = A_rows * A_cols;
   int B_size = B_rows * B_cols;
   int C_size = C_rows * C_cols;
-  float *A, *B, *C;
+  double *A, *B, *C;
 
   int mat_size;
   // if (A_rows > A_cols) {
@@ -191,16 +191,16 @@ extern "C" float time_matmul(float* A_cpu, float *B_cpu, float *C_host, int a_ro
   cudaEventCreate(&stop_gpu);
   
   // Allocate Unified Memory – accessible from CPU or GPU
-  cudaMalloc(&A, A_size*sizeof(float));
-  cudaMalloc(&B, B_size*sizeof(float));
-  cudaMalloc(&C, C_size*sizeof(float));
+  cudaMalloc(&A, A_size*sizeof(double));
+  cudaMalloc(&B, B_size*sizeof(double));
+  cudaMalloc(&C, C_size*sizeof(double));
 
-	cudaMemcpy(A, A_cpu, A_size * sizeof(float), cudaMemcpyHostToDevice); 
+	cudaMemcpy(A, A_cpu, A_size * sizeof(double), cudaMemcpyHostToDevice); 
   const char* env_p;
 
 
-  // initialize_matrix<float>(B_cpu, B_rows, B_cols, rand_numbers);
-	cudaMemcpy(B, B_cpu, B_size * sizeof(float), cudaMemcpyHostToDevice);
+  // initialize_matrix<double>(B_cpu, B_rows, B_cols, rand_numbers);
+	cudaMemcpy(B, B_cpu, B_size * sizeof(double), cudaMemcpyHostToDevice);
 
   // launch kernel
 
@@ -230,25 +230,25 @@ extern "C" float time_matmul(float* A_cpu, float *B_cpu, float *C_host, int a_ro
     dim3 dim_block(COL_TILE_WIDTH, ROW_TILE_WIDTH, 1);
 
     cudaEventRecord(start_gpu);
-    naive_matrix_multiply<float><<<dim_grid, dim_block>>>(A, B, C, A_cols, C_rows, C_cols);
+    naive_matrix_multiply<double><<<dim_grid, dim_block>>>(A, B, C, A_cols, C_rows, C_cols);
     cudaEventRecord(stop_gpu);
 
     // Wait for GPU to finish before accessing on host
   }
   cudaDeviceSynchronize();  
   cudaEventElapsedTime(&gpu_time_ms, start_gpu, stop_gpu);
-  cudaMemcpy(C_host, C, C_size * sizeof(float), cudaMemcpyDeviceToHost);
-  if(env_p = std::getenv("ALNAIR_DBG")) {
-    if (strlen(env_p) > 0) {
-      std::cout << "A size: " << A_size << ", B size: " << B_size << ", C Size: " << C_size << std::endl;  
-      std::cout << "A: " << A_rows << "x" << A_cols << ", B: " << B_rows << "x" << B_cols <<  ", C: " << C_rows << "x" << C_cols << std::endl;  
-      // check_copy<float>(A, A_cpu, A_size, "A matrix");
-      // check_copy<float>(B, B_cpu, B_size, "B matrix");
-      check_copy<float>(C, C_host, C_size, "C matrix");
-      // std::cout << "\nC matrix" << std::endl;
-      // print_matrix<float>(C_host, C_rows, C_cols);
-    }
-  } 
+  cudaMemcpy(C_host, C, C_size * sizeof(double), cudaMemcpyDeviceToHost);
+  // if(env_p = std::getenv("ALNAIR_DBG")) {
+  //   if (strlen(env_p) > 0) {
+  //     std::cout << "A size: " << A_size << ", B size: " << B_size << ", C Size: " << C_size << std::endl;  
+  //     std::cout << "A: " << A_rows << "x" << A_cols << ", B: " << B_rows << "x" << B_cols <<  ", C: " << C_rows << "x" << C_cols << std::endl;  
+  //     // check_copy<double>(A, A_cpu, A_size, "A matrix");
+  //     // check_copy<double>(B, B_cpu, B_size, "B matrix");
+  //     check_copy<double>(C, C_host, C_size, "C matrix");
+  //     // std::cout << "\nC matrix" << std::endl;
+  //     // print_matrix<double>(C_host, C_rows, C_cols);
+  //   }
+  // } 
 
   // Free memory
   cudaFree(A);
@@ -293,11 +293,6 @@ extern "C" void perform_matmul(double* A_cpu, double *B_cpu, double *C_host, int
       std::cout << "A size: " << A_size << ", B size: " << B_size << ", C Size: " << C_size << std::endl;  
       std::cout << "A: " << A_rows << "x" << A_cols << ", B: " << B_rows << "x" << B_cols <<  ", C: " << C_rows << "x" << C_cols << std::endl;  
       check_copy<double>(A, A_cpu, A_size, "A matrix");
-
-      // double *C_cpy = (double *) malloc(C_size*sizeof(double));
-
-      // check_copy<double>(C, C_cpy, C_size, "C matrix");
-      // free(C_cpy);
     }
   } 
 
@@ -312,7 +307,7 @@ extern "C" void perform_matmul(double* A_cpu, double *B_cpu, double *C_host, int
     checkCublas(cublasCreate(&handle));
 
     cudaEventRecord(start_gpu);
-    stat = gpu_blas_mmul(&handle, (const float *)A_cpu, (const float *)B_cpu, (float *)C,  A_cols, C_rows, C_cols);
+    stat = gpu_blas_mmul(&handle, A_cpu, B_cpu, C,  A_cols, C_rows, C_cols);
     cudaEventRecord(stop_gpu);
       if(stat != CUBLAS_STATUS_SUCCESS){
          	std::cout << "cublasSgemmBatched failed" << std::endl;
@@ -336,7 +331,12 @@ extern "C" void perform_matmul(double* A_cpu, double *B_cpu, double *C_host, int
   cudaMemcpy(C_host, C, C_size * sizeof(double), cudaMemcpyDeviceToHost);
 
   cudaEventSynchronize(stop_gpu);
-
+  // if(env_p = std::getenv("ALNAIR_DBG")) {
+  //   if (strlen(env_p) > 0) {
+  //     std::cout << "double check A: " << A_rows << "x" << A_cols << ", B: " << B_rows << "x" << B_cols <<  ", C: " << C_rows << "x" << C_cols << std::endl;  
+  //     check_copy<double>(A, A_cpu, A_size, "A matrix");
+  //   }
+  // } 
   
   // Free memory
   cudaFree(A);

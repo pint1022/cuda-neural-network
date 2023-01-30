@@ -21,3 +21,21 @@ cublasStatus_t  gpu_blas_mmul(const cublasHandle_t * handle, const float *A, con
     // Destroy the handle
     // cublasDestroy(handle);
 }
+
+cublasStatus_t  gpu_blas_mmul(const cublasHandle_t * handle, const double *A, const double *B, double *C, const int m, const int k, const int n) {
+    int lda=m,ldb=k,ldc=m;
+    const double alf = 1;
+    const double bet = 0;
+    const double *alpha = &alf;
+    const double *beta = &bet;
+
+    // Create a handle for CUBLAS
+    // cublasHandle_t handle;
+    // checkCublas(cublasCreate(&handle));
+
+    // Do the actual multiplication
+    return (cublasDgemm(*handle, CUBLAS_OP_N, CUBLAS_OP_N, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc));
+
+    // Destroy the handle
+    // cublasDestroy(handle);
+}
