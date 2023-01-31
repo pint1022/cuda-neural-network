@@ -64,7 +64,8 @@ def test_numpy():
     mnist_data = get_dataset()
     row, col, data = gds.gds_read_numpy(mnist_data, batch_size)
     print("row: ", row, ", col: ", col)
-    print(data)
+    # print(data[:20])
+    print(data[0][0][:28])
 
 def test_abc():
     print("\n\nabc test")
@@ -82,9 +83,9 @@ def test_matmul():
     A = np.random.rand(a_row, a_col)
     B = np.random.rand(b_row, b_col)
     C = gds.matmul(A,B, a_row, a_col, b_row, b_col)
-    print("returned", C[:9])
+    # print("returned", C[:9])
     CC = np.matmul(A,B)
-    print("numpy", CC[:9])
+    # print("numpy", CC[:9])
 
 def test_matmul_blas():
     print("\n\ncublas matmul test")
@@ -93,24 +94,23 @@ def test_matmul_blas():
     b_row = a_col
     b_col = 1 << 11
     A = np.random.rand(a_row, a_col)
-    print(A[:9])
     B = np.random.rand(b_row, b_col)
     C = gds.bmatmul(A,B, a_row, a_col, b_row, b_col)
-    print("returned",  C[:9])
+    # print("returned",  C[:9])
     CC = np.matmul(A,B)
-    print("numpy", CC[:9])
+    # print("numpy", CC[:9])
 
 #
 # basice testing
 #
 #
-print(gds.vector_add(np.array([1., 2., 3.]), np.array([2., 3., 4.])))
+# print(gds.vector_add(np.array([1., 2., 3.]), np.array([2., 3., 4.])))
 
-# test_numpy()
+test_numpy()
 # test_abc()
 # test_add()
 # test_matmul()
-test_matmul_blas()
+# test_matmul_blas()
 
 
 

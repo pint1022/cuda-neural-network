@@ -43,8 +43,8 @@ class DataSetGDS : public GDSLayer {
                    char*);
   void read_labels(std::string file_name, char*);
 
-  char* train_data;
-  char* train_label;
+  char* train_data;    // train data address on GPU
+  char* train_label;   // train label address on GPU
   int train_data_index;
   int train_data_size;
 

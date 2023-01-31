@@ -21,7 +21,7 @@ CUDA_LIBDIRS=-L /usr/local/cuda/targets/x86_64-linux/lib/ -L /usr/local/cuda/lib
 LIBS=  -lpthread -lcublas -ldl -lcudart_static -lrt -lcufile -lcuda -L   -Bstatic -L /usr/local/cuda/lib64/ -lcudart_static -lrt -lpthread -ldl 
 
 CUDAOBJ = $(BUILDDIR)/cublas_func.o $(BUILDDIR)/gds_add_unit_test.o $(BUILDDIR)/gds_readimg_unit_test.o $(BUILDDIR)/stddev_unit_test.o \
-          $(BUILDDIR)/storage_gds.o $(BUILDDIR)/dataset_gds.o $(BUILDDIR)/util_func.o $(BUILDDIR)/vectorAdd.o
+          $(BUILDDIR)/storage_gds.o $(BUILDDIR)/dataset_gds.o $(BUILDDIR)/util_func.o $(BUILDDIR)/vectorAdd.o $(BUILDDIR)/reader_numpy_format.o
 
 .PHONY: all build test clean
 
@@ -44,6 +44,7 @@ $(BUILDDIR)/libgdsunittests.a:  $(CUDAOBJ)
 	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/util_func.o $(BUILDDIR)/temp_util_func.o 
 	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/cublas_func.o $(BUILDDIR)/temp_cublas_func.o 
 	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/vectorAdd.o $(BUILDDIR)/temp_vectorAdd.o 
+	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/reader_numpy_format.o $(BUILDDIR)/temp_reader_numpy_format.o 
 	ranlib $(BUILDDIR)/libgdsunittests.a
 
 $(BUILDDIR)/gds_add_unit_test.o:  $(UNITTESTDIR)/gds_add_unit_test.cu
@@ -77,6 +78,10 @@ $(BUILDDIR)/cublas_func.o : $(CUDADIR)/cublas_func.cu
 $(BUILDDIR)/vectorAdd.o : $(CUDADIR)/vectorAdd.cu
 	$(NVCC) $(CFLAGS) -rdc=true --compiler-options '-fPIC' $(CUDA_INCDIRS) -c -o $(BUILDDIR)/temp_vectorAdd.o $(CUDADIR)/vectorAdd.cu  $(GENCODE_FLAGS)
 	${NVCC} -dlink --compiler-options '-fPIC' -o $(BUILDDIR)/vectorAdd.o $(BUILDDIR)/temp_vectorAdd.o $(CUDA_LIBDIRS) $(LIBS)  $(GENCODE_FLAGS)
+
+$(BUILDDIR)/reader_numpy_format.o : $(CUDADIR)/reader_numpy_format.cu
+	$(NVCC) $(CFLAGS) -rdc=true --compiler-options '-fPIC' $(CUDA_INCDIRS) -c -o $(BUILDDIR)/temp_reader_numpy_format.o $(CUDADIR)/reader_numpy_format.cu  $(GENCODE_FLAGS)
+	${NVCC} -dlink --compiler-options '-fPIC' -o $(BUILDDIR)/reader_numpy_format.o $(BUILDDIR)/temp_reader_numpy_format.o $(CUDA_LIBDIRS) $(LIBS)  $(GENCODE_FLAGS)
 
 clean:
 	rm -rf *.out *.bin *.exe *.o *.a *.so *.png $(BUILDDIR)/*

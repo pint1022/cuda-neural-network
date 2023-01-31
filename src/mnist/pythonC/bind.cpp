@@ -5,6 +5,7 @@
 
 #include "util_func.cuh"
 #include "cublas_func.cuh"
+#include "reader_api.cuh"
 
 static PyObject *unitTestError;
 
@@ -104,8 +105,6 @@ test_read_image_data(PyObject* self, PyObject* args) {
         dims[2] = col;
     }
     outArray = (PyArrayObject *)PyArray_SimpleNewFromData(1, dims, NPY_INT, output);
-    // PyArray_ENABLEFLAGS(outArray, NPY_ARRAY_OWNDATA);    
-    // outArray->flags |= NPY_ARRAY_OWNDATA;
     return PyArray_Return(outArray); 
 
 }
@@ -128,11 +127,11 @@ test_read_numpy(PyObject* self, PyObject* args) {
     
     printf("batchsize: %d, rows: %d, cols: %d\n", length,  row , col);
     if (ret != NULL) {
-       dims[0] = length*row*col;
+       dims[0] = length;
        dims[1] = row;
        dims[2] = col;        
        printf("got data\n");
-       outArray = (PyArrayObject *)PyArray_SimpleNewFromData(1, dims, NPY_INT, output);
+       outArray = (PyArrayObject *)PyArray_SimpleNewFromData(3, dims, NPY_INT, output);
        outArray->flags |= NPY_ARRAY_OWNDATA;
     //    return  Py_BuildValue("iiO", row, col, outArray);
     //    return PyArray_Return(outArray);        
@@ -141,8 +140,6 @@ test_read_numpy(PyObject* self, PyObject* args) {
        printf("ERROR: null return\n");        
     }
 
-    // return PyArray_Return(outArray);        
-    // return Py_BuildValue("ii", row, col);
     return Py_BuildValue("iiO", row, col, outArray);
 
 
