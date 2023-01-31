@@ -55,17 +55,18 @@ def test_readimg():
     print("\n\nread image")
     batch_size = 256
     mnist_data = get_dataset()
-
-    data = gds.gds_read_image_data(mnist_data, batch_size)
+    row, col, data = gds.gds_read_image_data(mnist_data, batch_size)
+    print(data[4][8:18])
+    print(np.ndim(data), np.shape(data))
 
 def test_numpy():
-    print("\n\nread numpy format image")
+    print("\n\n(PYT): read numpy format image")
     batch_size = 256
     mnist_data = get_dataset()
     row, col, data = gds.gds_read_numpy(mnist_data, batch_size)
     print("(PYT) row: ", row, ", col: ", col)
-    # print(data[:20])
-    print(data[0][0][:28])
+    # print(data[4][8:18])
+    # print(np.ndim(data), np.shape(data))
 
 def test_abc():
     print("\n\nabc test")
@@ -108,7 +109,7 @@ def test_matmul_blas():
 
 test_numpy()
 # test_abc()
-# test_add()
+test_add()
 # test_matmul()
 # test_matmul_blas()
 

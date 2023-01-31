@@ -33,15 +33,84 @@ unsigned int reverse_int(unsigned int i) {
          ((unsigned int)ch3 << 8) + ch4;
 }
 
+char* gds_read_numpy(char * file_name, int length,  int *row, int *col) {
+	int fd;
+	int ret;
+	char *gpumem_buf, *meta;
+	int *sys_len;
+	int *gpu_len;
+	int parasize=KB(1);
 
-// template <typename Vector>
-// void print_vector(const std::string& name, const Vector& v)
-// {
-//   typedef typename Vector::value_type T;
-//   std::cout << "  " << std::setw(20) << name << "  ";
-//   thrust::copy(v.begin(), v.end(), std::ostream_iterator<T>(std::cout, " "));
-//   std::cout << std::endl;
-// }
+	int bufsize = KB(4);
+	// int n_bufsize = n_rows * n_cols * sizeof(float);
+	off_t file_offset = 0;
+	off_t mem_offset = 0;
+	int metasize=16;
+
+
+	CUfileDescr_t cf_desc; 
+	CUfileHandle_t cf_handle;
+
+	cuFileDriverOpen();
+	fd = open(file_name, O_RDWR|O_DIRECT);
+	cf_desc.handle.fd = fd;
+	cf_desc.type = CU_FILE_HANDLE_TYPE_OPAQUE_FD;
+
+	cuFileHandleRegister(&cf_handle, &cf_desc);
+	unsigned int magic_number = 0;
+	unsigned int number_of_images = 0;
+	unsigned int n_rows = 0;
+	unsigned int n_cols = 0;
+
+
+	// thrust::device_vector<char> data_tt(bufsize);
+	// gpumem_buf = (char*)thrust::raw_pointer_cast(&data[0]);	
+	cudaMalloc(&meta, metasize);
+	// cuFileBufRegister((char*)meta, metasize, 0);
+
+	ret = cuFileRead(cf_handle, (char*)meta, metasize, file_offset, mem_offset);
+	if (ret < 0) {
+		printf("cuFileRead failed : %d\n", ret); 
+	} 
+	// else {
+	// 	printf("ret %d\n", ret);
+	// }
+
+	sys_len = (int*)malloc(parasize);
+	cudaMemcpy(sys_len, meta, metasize, cudaMemcpyDeviceToHost);
+	magic_number = reverse_int(((int*)sys_len)[0]);
+	number_of_images = reverse_int(((int*)sys_len)[1]);
+	n_rows = reverse_int(((int*)sys_len)[2]);
+	n_cols = reverse_int(((int*)sys_len)[3]);
+	free(sys_len);
+	cudaFree(meta);
+
+
+	bufsize = n_rows * n_cols * sizeof(char) * number_of_images;
+	cudaMalloc(&gpumem_buf, bufsize);
+	file_offset = metasize;
+	mem_offset = 0;
+
+	ret = cuFileRead(cf_handle, (char*)gpumem_buf, bufsize, file_offset, mem_offset);
+
+	char * output = NULL;
+	if (ret < 0) {
+		printf("cuFileRead failed : %d\n", ret); 
+	} else {
+		// printf("ret %d data, should be 16\n", ret);
+		output = (char*) malloc(bufsize);
+		cudaMemcpy(output, gpumem_buf, bufsize, cudaMemcpyDeviceToHost);
+		*row = n_rows;
+		*col = n_cols;		
+	}
+
+	cudaFree(gpumem_buf);
+	close(fd);
+	cuFileHandleDeregister(&cf_handle);
+	cuFileDriverClose();
+
+	return output;
+}
 
 char* read_numpy(char * file_name, int length,  int *row, int *col) {
 	int fd;
@@ -81,9 +150,10 @@ char* read_numpy(char * file_name, int length,  int *row, int *col) {
 	ret = cuFileRead(cf_handle, (char*)meta, metasize, file_offset, mem_offset);
 	if (ret < 0) {
 		printf("cuFileRead failed : %d\n", ret); 
-	} else {
-		printf("ret %d\n", ret);
-	}
+	} 
+	// else {
+	// 	printf("ret %d\n", ret);
+	// }
 
 	sys_len = (int*)malloc(parasize);
 	cudaMemcpy(sys_len, meta, metasize, cudaMemcpyDeviceToHost);
@@ -91,20 +161,14 @@ char* read_numpy(char * file_name, int length,  int *row, int *col) {
 	number_of_images = reverse_int(((int*)sys_len)[1]);
 	n_rows = reverse_int(((int*)sys_len)[2]);
 	n_cols = reverse_int(((int*)sys_len)[3]);
-
-	// std::cout << file_name << std::endl;
-	// std::cout << "magic number = " << magic_number << std::endl;
-	// std::cout << "number of images = " << number_of_images << std::endl;
-	// std::cout << "rows = " << n_rows << std::endl;
-	// std::cout << "cols = " << n_cols << std::endl;
+	free(sys_len);
+	cudaFree(meta);
 
 
 	bufsize = n_rows * n_cols * sizeof(char) * number_of_images;
 	cudaMalloc(&gpumem_buf, bufsize);
-	file_offset = 4 * sizeof(int);
+	file_offset = metasize;
 	mem_offset = 0;
-
-	cuFileBufRegister((char*)gpumem_buf, bufsize, 0);
 
 	ret = cuFileRead(cf_handle, (char*)gpumem_buf, bufsize, file_offset, mem_offset);
 
@@ -112,18 +176,16 @@ char* read_numpy(char * file_name, int length,  int *row, int *col) {
 	if (ret < 0) {
 		printf("cuFileRead failed : %d\n", ret); 
 	} else {
-		printf("ret %d data\n", ret);
-		output = (char*) malloc(bufsize + 1);
+		// printf("ret %d data, should be 16\n", ret);
+		output = (char*) malloc(bufsize);
 		cudaMemcpy(output, gpumem_buf, bufsize, cudaMemcpyDeviceToHost);
-
-		ret = bufsize;
 		*row = n_rows;
 		*col = n_cols;		
 	}
 
-	cuFileBufDeregister((char*)gpumem_buf);
 	cudaFree(gpumem_buf);
 	close(fd);
+	cuFileHandleDeregister(&cf_handle);
 	cuFileDriverClose();
 
 	return output;

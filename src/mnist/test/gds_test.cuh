@@ -13,8 +13,7 @@
 #include <dataset.cuh>
 
 int test_operator_add(std::unique_ptr<DataSetGDS> gds, std::unique_ptr<DataSet> pty);
-float * read_image(char * minst_data_path, int length);
 char * read_label(char * minst_data_path, int length);
 double standardDeviation(std::vector<double> v);
-int read_image_data(char * minst_data_path, unsigned int batchsize, char** data, int* rows, int * cols);
 char* read_numpy(char * file_name, int batchsize, int* rows, int * cols);
+void test_storage(char * minst_data_path);

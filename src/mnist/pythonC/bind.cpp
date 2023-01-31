@@ -62,52 +62,6 @@ std_standard_dev(PyObject *self, PyObject* args)
     return PyFloat_FromDouble(standardDeviation(list));
 }
 
-static PyObject* 
-test_read_image(PyObject* self, PyObject* args) {
-    char * datafile;
-    int length;
-    float * output;
-
-    if (!PyArg_ParseTuple(args, "si", &datafile, &length))
-        return NULL;
-
-
-    printf("datafile: %s, length: %d\n", datafile, length);
-
-
-    output =  read_image(datafile, length);
-    npy_intp dims[1];
-    dims[0] = length;
-    return PyArray_SimpleNewFromData(1, dims, PyArray_TYPE(output), output);
-
-}
-
-static PyObject* 
-test_read_image_data(PyObject* self, PyObject* args) {
-    char * datafile;
-    int length;
-    char * output;
-    PyArrayObject *outArray = NULL;    
-
-    if (!PyArg_ParseTuple(args, "si", &datafile, &length))
-        return NULL;
-
-
-    int col, row;
-    int ret =  read_image_data(datafile, length, &output, &row, &col);
-    npy_intp dims[3]; //B R W 
-    
-    printf("image_data - batchsize: %d, rows: %d, cols: %d\n", length,  row , col);
-
-    if (ret > 0) {
-        dims[0] = ret;
-        dims[1] = row;
-        dims[2] = col;
-    }
-    outArray = (PyArrayObject *)PyArray_SimpleNewFromData(3, dims, NPY_INT, output);
-    return PyArray_Return(outArray); 
-
-}
 
 static PyObject* 
 test_read_numpy(PyObject* self, PyObject* args) {
@@ -119,21 +73,18 @@ test_read_numpy(PyObject* self, PyObject* args) {
     if (!PyArg_ParseTuple(args, "si", &datafile, &batch))
         return NULL;
 
-
     output =  read_numpy(datafile, batch,  &row, &col);
-
     npy_intp dims[3]; //B R W 
     
     printf("(BIND) Data returned: batchsize = %d, rows = %d, cols = %d\n", batch,  row , col);
-    if (output != NULL) {
-       dims[0] = batch;
-       dims[1] = row;
-       dims[2] = col;        
-       outArray = (PyArrayObject *)PyArray_SimpleNewFromData(3, dims, NPY_BYTE, output);
-    //    outArray->flags |= NPY_ARRAY_OWNDATA;
-    } else {
-       printf("ERROR: null return\n");        
+    int count;
+    if (output) {
+        dims[0] = batch;
+        dims[1] = row;
+        dims[2] = col;
+        count = batch * row * col;
     }
+    outArray = (PyArrayObject *)PyArray_SimpleNewFromData(3, dims, NPY_UINT8, output);
     return Py_BuildValue("iiO", row, col, outArray);
 }
 
@@ -174,8 +125,6 @@ adc3(PyObject *self, PyObject *args) {
 
   outArray = (PyArrayObject *)
                PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, pout);
-  // PyArray_ENABLEFLAGS(outArray, NPY_ARRAY_OWNDATA);    
-  //Py_INCREF(outArray);
   return PyArray_Return(outArray); 
 } 
 
@@ -252,9 +201,6 @@ b_matmul(PyObject *self, PyObject *args) {
 
   CArray = (PyArrayObject *)
                PyArray_SimpleNewFromData(2, dims, NPY_DOUBLE, pC);
-  // free(pC);
-//   PyArray_ENABLEFLAGS(CArray, NPY_ARRAY_OWNDATA);    
-  //Py_INCREF(outArray);
   return PyArray_Return(CArray); 
 } 
 
@@ -290,10 +236,8 @@ vector_add(PyObject* self, PyObject* args) {
 char system_docs[] = "call shell command by 'system'.  import gds_unittest as gds gds.system(\'ls -l\') ";
 char addfunc_docs[] = "Add two numbers function.";
 char stddevfunc_docs[] = "Return the standard deviation of a list.";
-char gds_readimage_docs[] = "Read a batch of data from imagefile(mnist).";
 char gds_readimagedata_docs[] = "Read a batch of data from imagefile(mnist). It returns the rows and columns of image";
 char gds_read_narray_docs[] = "n-bit Analog-to-Digital Converter (ADC)";
-
 char gds_matmul_docs[] = "matrix matmul op";
 char gds_bmatmul_docs[] = "matrix matmul op in cublas";
 char time_bmatmul_docs[] = "timing the matrix matmul op in cublas";
@@ -306,9 +250,7 @@ static PyMethodDef unittest_funcs[] = {
 	{	"system",	(PyCFunction)gds_system, METH_VARARGS,	system_docs},
 	{	"add", (PyCFunction)add, METH_VARARGS,	addfunc_docs},
 	{	"standard_dev",	(PyCFunction)std_standard_dev,	METH_VARARGS,	stddevfunc_docs},
-	{	"gds_read_image",	(PyCFunction)test_read_image,	METH_VARARGS,	gds_readimage_docs},
-	{	"gds_read_image_data", (PyCFunction)test_read_image_data, METH_VARARGS,	gds_readimage_docs},
-	{	"gds_read_numpy",	(PyCFunction)test_read_numpy,	METH_VARARGS,	gds_readimage_docs},
+	{	"gds_read_numpy",	(PyCFunction)test_read_numpy,	METH_VARARGS,	gds_readimagedata_docs},
 	{	"adc3",	(PyCFunction)adc3,METH_VARARGS,	gds_read_narray_docs},
 	{	"matmul", (PyCFunction)matmul,	METH_VARARGS,	gds_matmul_docs},
 	{	"bmatmul", (PyCFunction)b_matmul,METH_VARARGS,	gds_bmatmul_docs},
