@@ -92,11 +92,11 @@ char* read_numpy(char * file_name, int length,  int *row, int *col) {
 	n_rows = reverse_int(((int*)sys_len)[2]);
 	n_cols = reverse_int(((int*)sys_len)[3]);
 
-	std::cout << file_name << std::endl;
-	std::cout << "magic number = " << magic_number << std::endl;
-	std::cout << "number of images = " << number_of_images << std::endl;
-	std::cout << "rows = " << n_rows << std::endl;
-	std::cout << "cols = " << n_cols << std::endl;
+	// std::cout << file_name << std::endl;
+	// std::cout << "magic number = " << magic_number << std::endl;
+	// std::cout << "number of images = " << number_of_images << std::endl;
+	// std::cout << "rows = " << n_rows << std::endl;
+	// std::cout << "cols = " << n_cols << std::endl;
 
 
 	bufsize = n_rows * n_cols * sizeof(char) * number_of_images;

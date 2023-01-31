@@ -104,7 +104,7 @@ test_read_image_data(PyObject* self, PyObject* args) {
         dims[1] = row;
         dims[2] = col;
     }
-    outArray = (PyArrayObject *)PyArray_SimpleNewFromData(1, dims, NPY_INT, output);
+    outArray = (PyArrayObject *)PyArray_SimpleNewFromData(3, dims, NPY_INT, output);
     return PyArray_Return(outArray); 
 
 }
@@ -113,36 +113,28 @@ static PyObject*
 test_read_numpy(PyObject* self, PyObject* args) {
     char * datafile;
     char * output;
-    int col, row, length;
+    int col, row, batch;
     PyArrayObject *outArray = NULL;    
 
-    if (!PyArg_ParseTuple(args, "si", &datafile, &length))
+    if (!PyArg_ParseTuple(args, "si", &datafile, &batch))
         return NULL;
 
 
-    char* ret =  read_numpy(datafile, length,  &row, &col);
-    // int ret =  read_image_data(datafile, length, output, &row, &col);
+    output =  read_numpy(datafile, batch,  &row, &col);
 
     npy_intp dims[3]; //B R W 
     
-    printf("batchsize: %d, rows: %d, cols: %d\n", length,  row , col);
-    if (ret != NULL) {
-       dims[0] = length;
+    printf("(BIND) Data returned: batchsize = %d, rows = %d, cols = %d\n", batch,  row , col);
+    if (output != NULL) {
+       dims[0] = batch;
        dims[1] = row;
        dims[2] = col;        
-       printf("got data\n");
-       outArray = (PyArrayObject *)PyArray_SimpleNewFromData(3, dims, NPY_INT, output);
-       outArray->flags |= NPY_ARRAY_OWNDATA;
-    //    return  Py_BuildValue("iiO", row, col, outArray);
-    //    return PyArray_Return(outArray);        
-    //    free(ret);
+       outArray = (PyArrayObject *)PyArray_SimpleNewFromData(3, dims, NPY_BYTE, output);
+    //    outArray->flags |= NPY_ARRAY_OWNDATA;
     } else {
        printf("ERROR: null return\n");        
     }
-
     return Py_BuildValue("iiO", row, col, outArray);
-
-
 }
 
 static PyObject *
@@ -359,9 +351,3 @@ PyInit_unittests(void)
 
     return m;
 }
-
-
-// PyMODINIT_FUNC initmwa()  {
-//     Py_InitModule("mwa", mwa_methods);
-//     import_array();  // for NumPy
-// }

@@ -63,7 +63,7 @@ def test_numpy():
     batch_size = 256
     mnist_data = get_dataset()
     row, col, data = gds.gds_read_numpy(mnist_data, batch_size)
-    print("row: ", row, ", col: ", col)
+    print("(PYT) row: ", row, ", col: ", col)
     # print(data[:20])
     print(data[0][0][:28])
 
