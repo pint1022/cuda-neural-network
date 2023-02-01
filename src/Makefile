@@ -20,7 +20,7 @@ CUDA_INCDIRS=-I /usr/local/cuda/include/  -I /usr/local/cuda/targets/x86_64-linu
 CUDA_LIBDIRS=-L /usr/local/cuda/targets/x86_64-linux/lib/ -L /usr/local/cuda/lib64/ -lcufile -L /usr/local/cuda/lib64/ -lcuda -L   -Bstatic  
 LIBS=  -lpthread -lcublas -ldl -lcudart_static -lrt -lcufile -lcuda -L   -Bstatic -L /usr/local/cuda/lib64/ -lcudart_static -lrt -lpthread -ldl 
 
-CUDAOBJ = $(BUILDDIR)/cublas_func.o $(BUILDDIR)/gds_add_unit_test.o  $(BUILDDIR)/stddev_unit_test.o $(BUILDDIR)/gds_datastorge_test.o\
+CUDAOBJ = $(BUILDDIR)/cublas_func.o $(BUILDDIR)/gds_add_unit_test.o  $(BUILDDIR)/stddev_unit_test.o $(BUILDDIR)/gds_dataset_test.o\
           $(BUILDDIR)/storage_gds.o $(BUILDDIR)/dataset_gds.o $(BUILDDIR)/util_func.o $(BUILDDIR)/vectorAdd.o $(BUILDDIR)/reader_numpy_format.o
 
 .PHONY: all build test clean $(CUDAOBJ)
@@ -44,7 +44,7 @@ $(BUILDDIR)/libgdsunittests.a:  $(CUDAOBJ)
 	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/cublas_func.o $(BUILDDIR)/temp_cublas_func.o 
 	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/vectorAdd.o $(BUILDDIR)/temp_vectorAdd.o 
 	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/reader_numpy_format.o $(BUILDDIR)/temp_reader_numpy_format.o 
-	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/gds_datastorge_test.o $(BUILDDIR)/temp_gds_datastorge_test.o 
+	ar cru $(BUILDDIR)/libgdsunittests.a $(BUILDDIR)/gds_dataset_test.o $(BUILDDIR)/temp_gds_dataset_test.o 
 	ranlib $(BUILDDIR)/libgdsunittests.a
 
 $(BUILDDIR)/gds_add_unit_test.o:  $(UNITTESTDIR)/gds_add_unit_test.cu
@@ -79,9 +79,9 @@ $(BUILDDIR)/reader_numpy_format.o : $(CUDADIR)/reader_numpy_format.cu
 	$(NVCC) $(CFLAGS) -rdc=true --compiler-options '-fPIC' $(CUDA_INCDIRS) -c -o $(BUILDDIR)/temp_reader_numpy_format.o $(CUDADIR)/reader_numpy_format.cu  $(GENCODE_FLAGS)
 	${NVCC} -dlink --compiler-options '-fPIC' -o $(BUILDDIR)/reader_numpy_format.o $(BUILDDIR)/temp_reader_numpy_format.o $(CUDA_LIBDIRS) $(LIBS)  $(GENCODE_FLAGS)
 
-$(BUILDDIR)/gds_datastorge_test.o : $(UNITTESTDIR)/gds_datastorge_test.cu
-	$(NVCC) $(CFLAGS) -rdc=true --compiler-options '-fPIC' $(CUDA_INCDIRS) -c -o $(BUILDDIR)/temp_gds_datastorge_test.o $(UNITTESTDIR)/gds_datastorge_test.cu  $(GENCODE_FLAGS)
-	${NVCC} -dlink --compiler-options '-fPIC' -o $(BUILDDIR)/gds_datastorge_test.o $(BUILDDIR)/temp_gds_datastorge_test.o $(CUDA_LIBDIRS) $(LIBS)  $(GENCODE_FLAGS)
+$(BUILDDIR)/gds_dataset_test.o : $(UNITTESTDIR)/gds_dataset_test.cu
+	$(NVCC) $(CFLAGS) -rdc=true --compiler-options '-fPIC' $(CUDA_INCDIRS) -c -o $(BUILDDIR)/temp_gds_dataset_test.o $(UNITTESTDIR)/gds_dataset_test.cu  $(GENCODE_FLAGS)
+	${NVCC} -dlink --compiler-options '-fPIC' -o $(BUILDDIR)/gds_dataset_test.o $(BUILDDIR)/temp_gds_dataset_test.o $(CUDA_LIBDIRS) $(LIBS)  $(GENCODE_FLAGS)
 
 clean:
 	rm -rf *.out *.bin *.exe *.o *.a *.so *.png $(BUILDDIR)/*

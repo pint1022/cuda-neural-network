@@ -232,6 +232,30 @@ vector_add(PyObject* self, PyObject* args) {
     return PyArray_SimpleNewFromData(1, PyArray_DIMS(array1), PyArray_TYPE(array1), output);
 }
 
+static PyObject* 
+test_dataset(PyObject* self, PyObject* args) {
+    char * datafile;
+    char * output;
+    int col, row, batch;
+    PyArrayObject *outArray = NULL;    
+
+    if (!PyArg_ParseTuple(args, "si", &datafile, &batch))
+        return NULL;
+
+    output =  test_dataset(datafile, &batch,  &row, &col);
+    npy_intp dims[3]; //B R W 
+    
+    printf("(BIND) Data returned: batchsize = %d, rows = %d, cols = %d\n", batch,  row , col);
+    int count;
+    if (output) {
+        dims[0] = batch;
+        dims[1] = row;
+        dims[2] = col;
+        count = batch * row * col;
+    }
+    outArray = (PyArrayObject *)PyArray_SimpleNewFromData(3, dims, NPY_UINT8, output);
+    return Py_BuildValue("iiO", row, col, outArray);
+}
 
 char system_docs[] = "call shell command by 'system'.  import gds_unittest as gds gds.system(\'ls -l\') ";
 char addfunc_docs[] = "Add two numbers function.";

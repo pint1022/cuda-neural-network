@@ -101,18 +101,22 @@ def test_matmul_blas():
     CC = np.matmul(A,B)
     # print("numpy", CC[:9])
 
+def test_dataset():
+    print("\n\n(PYT): dataset class test")
+    row, col, data = gds.test_dataset(mnist_data, batch_size)
+    print("(PYT) row: ", row, ", col: ", col)
+    # print(data[4][8:18])
+    # print(np.ndim(data), np.shape(data))
 #
 # basice testing
 #
 #
 # print(gds.vector_add(np.array([1., 2., 3.]), np.array([2., 3., 4.])))
-
-test_numpy()
 # test_abc()
-test_add()
 # test_matmul()
 # test_matmul_blas()
-
+test_numpy()
+test_dataset()
 
 
 

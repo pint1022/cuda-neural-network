@@ -217,7 +217,8 @@ void DataSetGDS::read_images(std::string file_name, char * gpumem_buf) {
 		// printf("ret %d data, should be 16\n", ret);
 		this->height = n_rows;
 		this->width = n_cols;
-    this->train_data_size = bufsize;	
+    this->train_data_size = bufsize;
+    this->batch = number_of_images;
 	}
 
 	close(fd);
@@ -262,7 +263,7 @@ void DataSetGDS::read_labels(std::string file_name,  char * gpulbl_buf) {
       std::cout << "cuFileRead failed:" << ret << std::endl; 
     } 
     printf("label ret %d\n", ret);
-    
+
     cudaMemcpy(sys_len, meta, metasize, cudaMemcpyDeviceToHost);
     magic_number = this->reverse_int(magic_number);
     number_of_images = this->reverse_int(number_of_images);

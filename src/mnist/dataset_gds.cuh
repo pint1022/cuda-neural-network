@@ -24,6 +24,8 @@ class DataSetGDS : public GDSLayer {
 
   int get_height() { return this->height; }
   int get_width() { return this->width; }
+  int get_number_of_image() { return this->batch; }
+
   GDSStorage* get_label() { return this->output_label.get(); }
   //
   // for unit testing
@@ -55,6 +57,7 @@ class DataSetGDS : public GDSLayer {
 
   int height;
   int width;
+  int batch;
   bool shuffle;
   std::unique_ptr<GDSStorage> output_label;
 };
