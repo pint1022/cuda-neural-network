@@ -6,6 +6,10 @@ import timeit
 import pandas as pd
 from matplotlib import pyplot as plt
 import unittests as gds
+import idx2numpy
+from sklearn.metrics import mean_squared_error
+
+EPSILON = (1e-5)
 
 def get_dataset():
     datasetDir = os.getenv('ALNAIR_DATASET')
@@ -101,13 +105,30 @@ def test_matmul_blas():
     CC = np.matmul(A,B)
     # print("numpy", CC[:9])
 
-def test_dataset():
+def test_dataset(flag=1):
     print("\n\n(PYT): dataset class test")
     mnist_data = get_dataset()
-    row, col, data = gds.test_dataset(mnist_data)
+
+    # flag: 0: train data; 1: train label; 2: test data; 3: test label;
+
+    row, col, gds_data = gds.test_dataset(mnist_data, flag)
     print("(PYT) row: ", row, ", col: ", col)    
-    print(data[4])
-    # print(np.ndim(data), np.shape(data))
+    # print(gds_data[4])
+    if flag==0:
+        imagefile = mnist_data + "/train-images-idx3-ubyte"
+    elif flag == 1:
+        imagefile = mnist_data + "/train-labels-idx1-ubyte"
+    # print(imagefile)
+    cpu_data = idx2numpy.convert_from_file(imagefile)
+    print("cpu dim: ", np.ndim(cpu_data), ", gpu dim:", np.ndim(gds_data))
+    for x in range(len(gds_data)):
+        mse = mean_squared_error(gds_data[x], cpu_data[x])
+        if mse > EPSILON:
+           print(x, " MSE: ", mse, "\n test failed.")
+           break
+    print("dataset test: PASS")
+
+    # print(np.ndim(data), np.shape(cpu_data))
 #
 # basice testing
 #

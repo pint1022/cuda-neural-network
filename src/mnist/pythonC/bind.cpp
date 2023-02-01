@@ -236,24 +236,31 @@ static PyObject*
 test_dataset(PyObject* self, PyObject* args) {
     char * datafile;
     char * output;
+    int flag;
     int col, row, batch;
     PyArrayObject *outArray = NULL;    
 
-    if (!PyArg_ParseTuple(args, "s", &datafile))
+    if (!PyArg_ParseTuple(args, "si", &datafile, &flag))
         return NULL;
 
-    output =  test_dataset(datafile, &batch,  &row, &col);
+    //
+    // flag: 0, data; 1: label; 2: test data; 3: test label;
+    //
+    output =  test_dataset(datafile, &batch,  &row, &col, flag);
     npy_intp dims[3]; //B R W 
     
     printf("(BIND) Data returned: batchsize = %d, rows = %d, cols = %d\n", batch,  row , col);
-    int count;
+    int dim=3;
     if (output) {
         dims[0] = batch;
         dims[1] = row;
         dims[2] = col;
-        count = batch * row * col;
+        // count = batch * row * col;
+        if (flag%2 == 0)
+          dim = 1;
     }
-    outArray = (PyArrayObject *)PyArray_SimpleNewFromData(3, dims, NPY_UINT8, output);
+    outArray = (PyArrayObject *)PyArray_SimpleNewFromData(dim, dims, NPY_UINT8, output);
+    // free(output);
     return Py_BuildValue("iiO", row, col, outArray);
 }
 

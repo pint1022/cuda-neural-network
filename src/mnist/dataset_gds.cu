@@ -14,11 +14,11 @@
 DataSetGDS::DataSetGDS(std::string mnist_data_path, bool shuffle)
     : shuffle(shuffle), train_data_index(0), test_data_index(0) {
   // train data
-  this->read_images(mnist_data_path + "/train-images-idx3-ubyte",  &(this->train_data));
-  // this->read_labels(mnist_data_path + "/train-labels-idx1-ubyte",  this->train_label);
+  // this->read_images(mnist_data_path + "/train-images-idx3-ubyte",  &(this->train_data));
+  this->read_labels(mnist_data_path + "/train-labels-idx1-ubyte",  &this->train_label);
   // // test data
-  // this->read_images(mnist_data_path + "/t10k-images-idx3-ubyte",  this->test_data);
-  // this->read_labels(mnist_data_path + "/t10k-labels-idx1-ubyte",  this->test_label);
+  // this->read_images(mnist_data_path + "/t10k-images-idx3-ubyte",  &this->test_data);
+  // this->read_labels(mnist_data_path + "/t10k-labels-idx1-ubyte",  &this->test_label);
 }
 
 void DataSetGDS::reset() {
@@ -264,17 +264,20 @@ void DataSetGDS::read_labels(std::string file_name,  char ** gpulbl_buf) {
     } 
     printf("label ret %d\n", ret);
 
+    metasize = ret;
     cudaMemcpy(sys_len, meta, metasize, cudaMemcpyDeviceToHost);
     magic_number = this->reverse_int(magic_number);
     number_of_images = this->reverse_int(number_of_images);
     free(sys_len);
     cudaFree(meta);
 
-    std::cout << file_name << std::endl;
-    std::cout << "magic number = " << magic_number << std::endl;
-    std::cout << "number of images = " << number_of_images << std::endl;
+    // std::cout << file_name << std::endl;
+    // std::cout << "magic number = " << magic_number << std::endl;
+    // std::cout << "number of images = " << number_of_images << std::endl;
 
     if (number_of_images > 0 ) {
+      this->batch = number_of_images;
+
       cudaMalloc(gpulbl_buf, bufsize);
       off_t file_offset = metasize;
       off_t mem_offset = 0;
