@@ -239,7 +239,7 @@ test_dataset(PyObject* self, PyObject* args) {
     int col, row, batch;
     PyArrayObject *outArray = NULL;    
 
-    if (!PyArg_ParseTuple(args, "si", &datafile, &batch))
+    if (!PyArg_ParseTuple(args, "s", &datafile))
         return NULL;
 
     output =  test_dataset(datafile, &batch,  &row, &col);
@@ -266,6 +266,7 @@ char gds_matmul_docs[] = "matrix matmul op";
 char gds_bmatmul_docs[] = "matrix matmul op in cublas";
 char time_bmatmul_docs[] = "timing the matrix matmul op in cublas";
 char time_matmul_docs[] = "timing the matrix matmul op";
+char test_dataset_docs[] = "initialize dataset with gds file read, return the data read from the file";
 
 
 static PyObject *initError;
@@ -278,7 +279,8 @@ static PyMethodDef unittest_funcs[] = {
 	{	"adc3",	(PyCFunction)adc3,METH_VARARGS,	gds_read_narray_docs},
 	{	"matmul", (PyCFunction)matmul,	METH_VARARGS,	gds_matmul_docs},
 	{	"bmatmul", (PyCFunction)b_matmul,METH_VARARGS,	gds_bmatmul_docs},
-  { "vector_add", (PyCFunction)vector_add, METH_VARARGS, "add two vectors with CUDA"},
+    {   "vector_add", (PyCFunction)vector_add, METH_VARARGS, "add two vectors with CUDA"},
+	{	"test_dataset", (PyCFunction)test_dataset,METH_VARARGS,	test_dataset_docs},
 	{	NULL}
 };
 

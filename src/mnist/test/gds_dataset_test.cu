@@ -9,6 +9,7 @@ char* test_dataset(char * minst_data_path, int* batch, int *row, int *col) {
     ds.reset(new DataSetGDS(minst_data_path, true));
     char *buf = (char*)malloc(ds->get_train_datasize());
 
+    printf("%d, %d\n", ds->get_train_datasize(), ds->get_height());
     cudaMemcpy(buf, ds->get_train_data(), ds->get_train_datasize(), cudaMemcpyDeviceToHost);
     *row = ds->get_height();
     *col = ds->get_width();

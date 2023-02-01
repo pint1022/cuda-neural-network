@@ -41,9 +41,8 @@ class DataSetGDS : public GDSLayer {
 
  private:
   unsigned int reverse_int(unsigned int i);  // big endian
-  void read_images(std::string file_name,
-                   char*);
-  void read_labels(std::string file_name, char*);
+  void read_images(std::string file_name, char**);
+  void read_labels(std::string file_name, char**);
 
   char* train_data;    // train data address on GPU
   char* train_label;   // train label address on GPU

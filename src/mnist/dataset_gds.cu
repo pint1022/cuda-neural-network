@@ -14,11 +14,11 @@
 DataSetGDS::DataSetGDS(std::string mnist_data_path, bool shuffle)
     : shuffle(shuffle), train_data_index(0), test_data_index(0) {
   // train data
-  this->read_images(mnist_data_path + "/train-images-idx3-ubyte",  this->train_data);
-  this->read_labels(mnist_data_path + "/train-labels-idx1-ubyte",  this->train_label);
+  this->read_images(mnist_data_path + "/train-images-idx3-ubyte",  &(this->train_data));
+  // this->read_labels(mnist_data_path + "/train-labels-idx1-ubyte",  this->train_label);
   // // test data
-  this->read_images(mnist_data_path + "/t10k-images-idx3-ubyte",  this->test_data);
-  this->read_labels(mnist_data_path + "/t10k-labels-idx1-ubyte",  this->test_label);
+  // this->read_images(mnist_data_path + "/t10k-images-idx3-ubyte",  this->test_data);
+  // this->read_labels(mnist_data_path + "/t10k-labels-idx1-ubyte",  this->test_label);
 }
 
 void DataSetGDS::reset() {
@@ -154,7 +154,7 @@ unsigned int DataSetGDS::reverse_int(unsigned int i) {
          ((unsigned int)ch3 << 8) + ch4;
 }
 
-void DataSetGDS::read_images(std::string file_name, char * gpumem_buf) {
+void DataSetGDS::read_images(std::string file_name, char ** gpumem_buf) {
 	int fd;
 	int ret;
 	char *meta;
@@ -190,7 +190,7 @@ void DataSetGDS::read_images(std::string file_name, char * gpumem_buf) {
 
 	ret = cuFileRead(cf_handle, (char*)meta, metasize, file_offset, mem_offset);
 	if (ret < 0) {
-		printf("cuFileRead failed : %d\n", ret); 
+		printf("cuFileRead failed : %d, %s\n", ret, file_name); 
 	} 
 
 	sys_len = (int*)malloc(parasize);
@@ -204,11 +204,11 @@ void DataSetGDS::read_images(std::string file_name, char * gpumem_buf) {
 
 
 	bufsize = n_rows * n_cols * sizeof(char) * number_of_images;
-	cudaMalloc(&gpumem_buf, bufsize);
+	cudaMalloc(gpumem_buf, bufsize);
 	file_offset = metasize;
 	mem_offset = 0;
 
-	ret = cuFileRead(cf_handle, (char*)gpumem_buf, bufsize, file_offset, mem_offset);
+	ret = cuFileRead(cf_handle, (char*)*gpumem_buf, bufsize, file_offset, mem_offset);
 
 	char * output = NULL;
 	if (ret < 0) {
@@ -227,7 +227,7 @@ void DataSetGDS::read_images(std::string file_name, char * gpumem_buf) {
 }
 
 
-void DataSetGDS::read_labels(std::string file_name,  char * gpulbl_buf) {
+void DataSetGDS::read_labels(std::string file_name,  char ** gpulbl_buf) {
     int fd;
     int ret;
     
@@ -275,7 +275,7 @@ void DataSetGDS::read_labels(std::string file_name,  char * gpulbl_buf) {
     std::cout << "number of images = " << number_of_images << std::endl;
 
     if (number_of_images > 0 ) {
-      cudaMalloc(&gpulbl_buf, bufsize);
+      cudaMalloc(gpulbl_buf, bufsize);
       off_t file_offset = metasize;
       off_t mem_offset = 0;
       CUfileDescr_t cf_desc; 
@@ -287,7 +287,7 @@ void DataSetGDS::read_labels(std::string file_name,  char * gpulbl_buf) {
       cf_desc.type = CU_FILE_HANDLE_TYPE_OPAQUE_FD;
       cuFileHandleRegister(&cf_handle, &cf_desc);
 
-      ret = cuFileRead(cf_handle, (char*)gpulbl_buf, number_of_images, file_offset, mem_offset);
+      ret = cuFileRead(cf_handle, (char*)*gpulbl_buf, number_of_images, file_offset, mem_offset);
 
       cuFileDriverClose();
     }
